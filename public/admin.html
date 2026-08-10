@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Sistema de Votação</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Login -->
+    <div id="loginSection" class="auth-section">
+      <div class="auth-card">
+        <h1>🔐 Admin Login</h1>
+        <form id="loginForm">
+          <input type="text" id="username" placeholder="Usuário" required>
+          <input type="password" id="password" placeholder="Senha" required>
+          <button type="submit">Entrar</button>
+        </form>
+        <p class="auth-toggle">
+          Não tem conta? <a href="#" onclick="toggleAuthMode()">Criar conta</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Register -->
+    <div id="registerSection" class="auth-section" style="display:none;">
+      <div class="auth-card">
+        <h1>📝 Criar Admin</h1>
+        <form id="registerForm">
+          <input type="text" id="regUsername" placeholder="Usuário" required>
+          <input type="password" id="regPassword" placeholder="Senha" required>
+          <input type="password" id="regConfirm" placeholder="Confirmar senha" required>
+          <button type="submit">Criar</button>
+        </form>
+        <p class="auth-toggle">
+          Já tem conta? <a href="#" onclick="toggleAuthMode()">Fazer login</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboardSection" style="display:none;">
+      <header class="admin-header">
+        <div>
+          <h1>🗳️ Painel de Votações</h1>
+          <p class="user-info" id="userInfo"></p>
+        </div>
+        <button onclick="logout()" class="logout-btn">Sair</button>
+      </header>
+
+      <main class="admin-main">
+        <!-- Seção de Categorias -->
+        <section class="admin-section">
+          <h2>📂 Gerenciar Categorias</h2>
+          
+          <form id="categoryForm" class="form-group">
+            <input type="text" id="categoryName" placeholder="Nome da categoria" required>
+            <div class="date-inputs">
+              <div>
+                <label>Início:</label>
+                <input type="datetime-local" id="startDate" required>
+              </div>
+              <div>
+                <label>Encerramento:</label>
+                <input type="datetime-local" id="endDate" required>
+              </div>
+            </div>
+            <button type="submit">➕ Criar Categoria</button>
+          </form>
+
+          <div id="categoriesList" class="categories-list"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div id="editModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle">Editar Categoria</h2>
+      <form id="editForm" class="form-group">
+        <input type="text" id="editCategoryName" placeholder="Nome da categoria" required>
+        <div class="date-inputs">
+          <div>
+            <label>Início:</label>
+            <input type="datetime-local" id="editStartDate" required>
+          </div>
+          <div>
+            <label>Encerramento:</label>
+            <input type="datetime-local" id="editEndDate" required>
+          </div>
+        </div>
+        <div id="optionsSection">
+          <h3>Opções</h3>
+          <div id="optionsList"></div>
+          <div class="add-option">
+            <input type="text" id="newOptionText" placeholder="Nova opção">
+            <button type="button" onclick="addOptionInput()">➕</button>
+          </div>
+        </div>
+        <button type="submit">💾 Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
