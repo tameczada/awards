@@ -10,83 +10,34 @@ if (token) {
   showLogin();
 }
 
-// ===================== AUTENTICAÇÃO =====================
-function toggleAuthMode() {
-  const loginSection = document.getElementById('loginSection');
-  const registerSection = document.getElementById('registerSection');
-  loginSection.style.display = loginSection.style.display === 'none' ? 'block' : 'none';
-  registerSection.style.display = registerSection.style.display === 'none' ? 'block' : 'none';
-  event.preventDefault();
-}
-
-document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+// ===================== AUTENTICAÇÃO VIA CHAVE =====================
+document.getElementById('keyForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+  const key = document.getElementById('adminKey').value;
+  const errorDiv = document.getElementById('keyError');
 
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
+    const response = await fetch(`${API_URL}/auth/validate-key/${key}`);
     const data = await response.json();
 
     if (!response.ok) {
-      showMessage(data.error, 'error');
+      errorDiv.textContent = '❌ Chave inválida!';
+      errorDiv.style.display = 'block';
+      document.getElementById('adminKey').value = '';
       return;
     }
 
     localStorage.setItem('adminToken', data.token);
     token = data.token;
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
+    document.getElementById('adminKey').value = '';
+    errorDiv.style.display = 'none';
     showDashboard();
     loadCategories();
-    showMessage('Login realizado com sucesso!', 'success');
+    showMessage('✅ Acesso concedido!', 'success');
   } catch (error) {
-    showMessage('Erro ao fazer login: ' + error.message, 'error');
-  }
-});
-
-document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('regUsername').value;
-  const password = document.getElementById('regPassword').value;
-  const confirm = document.getElementById('regConfirm').value;
-
-  if (password !== confirm) {
-    showMessage('Senhas não conferem!', 'error');
-    return;
-  }
-
-  if (password.length < 6) {
-    showMessage('Senha deve ter pelo menos 6 caracteres!', 'error');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      showMessage(data.error, 'error');
-      return;
-    }
-
-    showMessage('Admin criado com sucesso! Agora faça login.', 'success');
-    toggleAuthMode();
-    document.getElementById('regUsername').value = '';
-    document.getElementById('regPassword').value = '';
-    document.getElementById('regConfirm').value = '';
-  } catch (error) {
-    showMessage('Erro ao criar admin: ' + error.message, 'error');
+    console.error('Erro ao validar chave:', error);
+    errorDiv.textContent = '❌ Erro ao validar chave';
+    errorDiv.style.display = 'block';
   }
 });
 

@@ -8,34 +8,18 @@
 </head>
 <body>
   <div class="admin-container">
-    <!-- Login -->
+    <!-- Login via Chave -->
     <div id="loginSection" class="auth-section">
       <div class="auth-card">
-        <h1>🔐 Admin Login</h1>
-        <form id="loginForm">
-          <input type="text" id="username" placeholder="Usuário" required>
-          <input type="password" id="password" placeholder="Senha" required>
-          <button type="submit">Entrar</button>
-        </form>
-        <p class="auth-toggle">
-          Não tem conta? <a href="#" onclick="toggleAuthMode()">Criar conta</a>
+        <h1>🔐 Admin Access</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 14px;">
+          Acesso apenas via chave segura
         </p>
-      </div>
-    </div>
-
-    <!-- Register -->
-    <div id="registerSection" class="auth-section" style="display:none;">
-      <div class="auth-card">
-        <h1>📝 Criar Admin</h1>
-        <form id="registerForm">
-          <input type="text" id="regUsername" placeholder="Usuário" required>
-          <input type="password" id="regPassword" placeholder="Senha" required>
-          <input type="password" id="regConfirm" placeholder="Confirmar senha" required>
-          <button type="submit">Criar</button>
+        <form id="keyForm">
+          <input type="password" id="adminKey" placeholder="Digite sua chave de admin" required>
+          <button type="submit">Acessar Painel</button>
         </form>
-        <p class="auth-toggle">
-          Já tem conta? <a href="#" onclick="toggleAuthMode()">Fazer login</a>
-        </p>
+        <p id="keyError" style="color: #ef4444; text-align: center; margin-top: 15px; display: none; font-weight: 600;"></p>
       </div>
     </div>
 

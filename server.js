@@ -27,8 +27,24 @@ const supabase = createClient(
 );
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-secret-super-seguro';
+const ADMIN_KEY = process.env.ADMIN_KEY || 'sua-chave-super-segura-aleatorio';
 
 // ===================== AUTENTICAÇÃO =====================
+// Validar chave de admin (novo método)
+app.get('/api/auth/validate-key/:key', (req, res) => {
+  const { key } = req.params;
+  
+  if (key === ADMIN_KEY) {
+    const token = jwt.sign({ id: 'admin', username: 'admin' }, JWT_SECRET, {
+      expiresIn: '30d'
+    });
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ error: 'Chave inválida' });
+  }
+});
+
+// Endpoints antigos (opcional - pode remover)
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, password } = req.body;
