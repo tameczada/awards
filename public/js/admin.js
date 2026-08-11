@@ -1,5 +1,5 @@
 const API_URL = '/api';
-let token = luian123
+let token = localStorage.getItem('adminToken');
 let currentEditingCategory = null;
 
 if (token) {
