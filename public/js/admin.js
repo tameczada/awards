@@ -3,6 +3,9 @@ let token = localStorage.getItem('adminToken');
 let currentEditingCategory = null;
 
 // Verificar se está logado
+showDashboard();
+
+
 if (token) {
   showDashboard();
   loadCategories();
