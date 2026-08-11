@@ -40,11 +40,6 @@ document.getElementById('keyForm')?.addEventListener('submit', async (e) => {
   }
 });
 
-function violei(){
-  showDashboard();
-    loadCategories();
-    showMessage('✅ Acesso concedido!',  
- }
 
 function logout() {
   if (confirm('Deseja realmente fazer logout?')) {
