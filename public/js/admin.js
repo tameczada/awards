@@ -1,10 +1,6 @@
 const API_URL = '/api';
-let token = localStorage.getItem('adminToken');
+let token = luian123
 let currentEditingCategory = null;
-
-// Verificar se está logado
-showDashboard();
-
 
 if (token) {
   showDashboard();
