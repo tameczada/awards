@@ -40,7 +40,7 @@ document.getElementById('keyForm')?.addEventListener('submit', async (e) => {
   }
 });
 
-function entrar(){
+function violei(){
   showDashboard();
     loadCategories();
     showMessage('✅ Acesso concedido!',  
