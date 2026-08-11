@@ -40,6 +40,12 @@ document.getElementById('keyForm')?.addEventListener('submit', async (e) => {
   }
 });
 
+function entrar(){
+  showDashboard();
+    loadCategories();
+    showMessage('✅ Acesso concedido!',  
+ }
+
 function logout() {
   if (confirm('Deseja realmente fazer logout?')) {
     localStorage.removeItem('adminToken');
