@@ -25,7 +25,11 @@ create table if not exists site_settings (
   site_title text default 'Votação Oficial',
   site_subtitle text default 'Escolha suas favoritas em cada categoria',
   background_image_url text,
+  background_mode text default 'image' check (background_mode in ('image','color')),
+  background_color text,
   theme text default 'premiere',
+  custom_colors jsonb,
+  font_pair text default 'classic',
   updated_at timestamptz default now(),
   constraint single_row check (id = 1)
 );
@@ -33,8 +37,12 @@ create table if not exists site_settings (
 insert into site_settings (id) values (1)
 on conflict (id) do nothing;
 
--- migração para bancos que rodaram o schema antes da coluna "theme" existir
+-- migração para bancos que rodaram o schema antes destas colunas existirem
 alter table site_settings add column if not exists theme text default 'premiere';
+alter table site_settings add column if not exists background_mode text default 'image';
+alter table site_settings add column if not exists background_color text;
+alter table site_settings add column if not exists custom_colors jsonb;
+alter table site_settings add column if not exists font_pair text default 'classic';
 
 -- =====================================================
 -- TABELA: categories

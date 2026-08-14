@@ -46,10 +46,17 @@
       const s = await res.json();
       if (s.site_title) { els.siteTitle.textContent = s.site_title; document.title = s.site_title; }
       if (s.site_subtitle) els.siteSubtitle.textContent = s.site_subtitle;
-      if (s.background_image_url) {
+
+      if (s.background_mode === 'color' && s.background_color) {
+        els.hero.style.backgroundImage = 'none';
+        els.hero.style.backgroundColor = s.background_color;
+      } else if (s.background_image_url) {
+        els.hero.style.backgroundColor = '';
         els.hero.style.backgroundImage = `url('${s.background_image_url}')`;
       }
-      if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme);
+
+      if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme, s.custom_colors);
+      if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
     } catch (e) { /* segue com defaults */ }
   }
 

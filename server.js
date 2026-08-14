@@ -242,16 +242,57 @@ app.get('/api/admin/me', authRequired, (req, res) => {
 // ADMIN: CONFIGURAÇÕES DO SITE
 // =====================================================
 
-const VALID_THEMES = ['premiere', 'rose', 'esmeralda', 'oceano', 'royal'];
+const VALID_THEMES = ['premiere', 'rose', 'esmeralda', 'oceano', 'royal', 'custom'];
+const VALID_FONTS = ['classic', 'elegante', 'moderno', 'impacto', 'jornal', 'divertido'];
+const VALID_BG_MODES = ['image', 'color'];
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+const CUSTOM_COLOR_KEYS = ['gold', 'goldSoft', 'crimson', 'crimsonSoft', 'void', 'card', 'cream'];
 
 app.put('/api/admin/settings', authRequired, async (req, res) => {
-  const { site_title, site_subtitle, theme } = req.body;
+  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors } = req.body;
   const update = { updated_at: new Date().toISOString() };
+
   if (site_title !== undefined) update.site_title = site_title;
   if (site_subtitle !== undefined) update.site_subtitle = site_subtitle;
+
   if (theme !== undefined) {
     if (!VALID_THEMES.includes(theme)) return res.status(400).json({ error: 'Tema inválido' });
     update.theme = theme;
+  }
+
+  if (font_pair !== undefined) {
+    if (!VALID_FONTS.includes(font_pair)) return res.status(400).json({ error: 'Fonte inválida' });
+    update.font_pair = font_pair;
+  }
+
+  if (background_mode !== undefined) {
+    if (!VALID_BG_MODES.includes(background_mode)) return res.status(400).json({ error: 'Modo de fundo inválido' });
+    update.background_mode = background_mode;
+  }
+
+  if (background_color !== undefined) {
+    if (background_color !== null && !HEX_RE.test(background_color)) {
+      return res.status(400).json({ error: 'Cor de fundo inválida (use formato #RRGGBB)' });
+    }
+    update.background_color = background_color;
+  }
+
+  if (custom_colors !== undefined) {
+    if (custom_colors !== null) {
+      if (typeof custom_colors !== 'object' || Array.isArray(custom_colors)) {
+        return res.status(400).json({ error: 'Cores personalizadas inválidas' });
+      }
+      const cleaned = {};
+      for (const key of Object.keys(custom_colors)) {
+        if (!CUSTOM_COLOR_KEYS.includes(key)) continue;
+        const val = custom_colors[key];
+        if (val && !HEX_RE.test(val)) return res.status(400).json({ error: `Cor inválida para "${key}" (use #RRGGBB)` });
+        if (val) cleaned[key] = val;
+      }
+      update.custom_colors = cleaned;
+    } else {
+      update.custom_colors = null;
+    }
   }
 
   const { data, error } = await supabase.from('site_settings').update(update).eq('id', 1).select().single();
@@ -265,7 +306,7 @@ app.post('/api/admin/settings/background', authRequired, upload.single('image'),
     const url = await uploadImage(req.file, 'backgrounds');
     const { data, error } = await supabase
       .from('site_settings')
-      .update({ background_image_url: url, updated_at: new Date().toISOString() })
+      .update({ background_image_url: url, background_mode: 'image', updated_at: new Date().toISOString() })
       .eq('id', 1)
       .select()
       .single();

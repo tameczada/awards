@@ -152,23 +152,80 @@
   });
 
   // ===== CONFIGURAÇÕES =====
+  let currentSettings = {};
+
   async function loadSettingsAdmin() {
     try {
       const s = await api('/settings');
+      currentSettings = s;
       $('settings-title').value = s.site_title || '';
       $('settings-subtitle').value = s.site_subtitle || '';
+
+      // fundo: imagem ou cor
+      const mode = s.background_mode === 'color' ? 'color' : 'image';
+      setBgMode(mode, { silent: true });
       if (s.background_image_url) {
         els.bgPreview.style.backgroundImage = `url('${s.background_image_url}')`;
         els.bgPreview.textContent = '';
       } else {
         els.bgPreview.textContent = 'Nenhuma imagem definida ainda';
       }
-      if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme);
+      const bgColor = s.background_color || '#16110d';
+      $('bg-color-input').value = bgColor;
+      $('bg-color-hex').value = bgColor.toUpperCase();
+
+      // tema de cores
+      if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme, s.custom_colors);
       renderThemeSwatches(s.theme || 'premiere');
+      renderCustomColorFields(s.custom_colors || {});
+      $('custom-colors-panel').style.display = s.theme === 'custom' ? 'block' : 'none';
+
+      // tipografia
+      if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
+      renderFontSwatches(s.font_pair || 'classic');
     } catch (err) {
       showToast(err.message, true);
     }
   }
+
+  // ===== FUNDO: IMAGEM OU COR =====
+  function setBgMode(mode, { silent = false } = {}) {
+    document.querySelectorAll('#bg-mode-toggle .mode-btn').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    $('bg-image-panel').style.display = mode === 'image' ? 'block' : 'none';
+    $('bg-color-panel').style.display = mode === 'color' ? 'block' : 'none';
+    if (!silent) saveBgMode(mode);
+  }
+
+  async function saveBgMode(mode) {
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ background_mode: mode }) });
+      showToast(mode === 'image' ? 'Usando imagem de fundo' : 'Usando cor sólida de fundo');
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  document.querySelectorAll('#bg-mode-toggle .mode-btn').forEach((btn) => {
+    btn.addEventListener('click', () => setBgMode(btn.dataset.mode));
+  });
+
+  $('bg-color-input').addEventListener('input', (e) => {
+    $('bg-color-hex').value = e.target.value.toUpperCase();
+  });
+  $('bg-color-hex').addEventListener('input', (e) => {
+    let v = e.target.value.trim();
+    if (v && !v.startsWith('#')) v = `#${v}`;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) $('bg-color-input').value = v;
+  });
+  $('bg-color-save').addEventListener('click', async () => {
+    const hex = $('bg-color-input').value;
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ background_color: hex, background_mode: 'color' }) });
+      showToast('Cor de fundo aplicada!');
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
 
   // ===== TEMA DE CORES =====
   function renderThemeSwatches(activeKey) {
@@ -190,14 +247,125 @@
       btn.addEventListener('click', () => selectTheme(key));
       container.appendChild(btn);
     });
+
+    const customBtn = document.createElement('button');
+    customBtn.type = 'button';
+    customBtn.className = `theme-swatch ${activeKey === 'custom' ? 'active' : ''}`;
+    customBtn.dataset.theme = 'custom';
+    customBtn.innerHTML = `
+      <span class="theme-swatch-dots">
+        <span style="background:conic-gradient(from 0deg, #cba135, #ff4f9a, #34c78a, #3fa9e8, #a875e8, #cba135)"></span>
+      </span>
+      <span class="theme-swatch-label">Personalizado</span>
+    `;
+    customBtn.addEventListener('click', () => selectTheme('custom'));
+    container.appendChild(customBtn);
   }
 
   async function selectTheme(key) {
-    if (window.applyVotacaoTheme) window.applyVotacaoTheme(key);
     renderThemeSwatches(key);
+    $('custom-colors-panel').style.display = key === 'custom' ? 'block' : 'none';
+
+    if (key === 'custom') {
+      // aplica as cores personalizadas já salvas (ou os defaults atuais) sem precisar salvar de novo
+      if (window.applyVotacaoTheme) window.applyVotacaoTheme('custom', currentSettings.custom_colors || {});
+    } else if (window.applyVotacaoTheme) {
+      window.applyVotacaoTheme(key);
+    }
+
     try {
       await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ theme: key }) });
-      showToast('Tema aplicado!');
+      currentSettings.theme = key;
+      showToast(key === 'custom' ? 'Modo personalizado ativado' : 'Tema aplicado!');
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  // ===== CORES PERSONALIZADAS =====
+  const COLOR_FIELD_LABELS = {
+    gold: 'Destaque principal',
+    goldSoft: 'Destaque claro',
+    crimson: 'Cor secundária',
+    crimsonSoft: 'Secundária clara',
+    void: 'Fundo da página',
+    card: 'Fundo dos cartões',
+    cream: 'Cor do texto',
+  };
+  const COLOR_FIELD_DEFAULTS = {
+    gold: '#cba135', goldSoft: '#e4c874', crimson: '#7a1f2b', crimsonSoft: '#9c3040',
+    void: '#16110d', card: '#211a14', cream: '#f3e9d7',
+  };
+
+  function renderCustomColorFields(customColors) {
+    const grid = $('custom-colors-grid');
+    if (!grid || !window.VOTACAO_COLOR_KEYS) return;
+    grid.innerHTML = '';
+    window.VOTACAO_COLOR_KEYS.forEach((key) => {
+      const value = customColors[key] || COLOR_FIELD_DEFAULTS[key];
+      const field = document.createElement('label');
+      field.className = 'custom-color-field';
+      field.innerHTML = `
+        <input type="color" data-color-key="${key}" value="${value}" />
+        <span>${COLOR_FIELD_LABELS[key]}</span>
+      `;
+      grid.appendChild(field);
+    });
+
+    grid.querySelectorAll('input[type="color"]').forEach((input) => {
+      input.addEventListener('input', () => {
+        const colors = collectCustomColors();
+        if (window.applyVotacaoTheme) window.applyVotacaoTheme('custom', colors);
+      });
+    });
+  }
+
+  function collectCustomColors() {
+    const colors = {};
+    document.querySelectorAll('#custom-colors-grid input[type="color"]').forEach((input) => {
+      colors[input.dataset.colorKey] = input.value;
+    });
+    return colors;
+  }
+
+  $('custom-colors-save').addEventListener('click', async () => {
+    const colors = collectCustomColors();
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ theme: 'custom', custom_colors: colors }) });
+      currentSettings.theme = 'custom';
+      currentSettings.custom_colors = colors;
+      renderThemeSwatches('custom');
+      showToast('Cores personalizadas salvas!');
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+
+  // ===== TIPOGRAFIA =====
+  function renderFontSwatches(activeKey) {
+    const container = $('font-swatches');
+    if (!container || !window.VOTACAO_FONTS) return;
+    container.innerHTML = '';
+    Object.entries(window.VOTACAO_FONTS).forEach(([key, f]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `font-swatch ${key === activeKey ? 'active' : ''}`;
+      btn.innerHTML = `
+        <div class="font-swatch-preview" style="font-family:${f.display};font-style:${f.italic ? 'italic' : 'normal'}">Aa</div>
+        <div class="font-swatch-label">${f.label}</div>
+      `;
+      btn.addEventListener('click', () => selectFont(key));
+      container.appendChild(btn);
+    });
+  }
+
+  async function selectFont(key) {
+    if (window.applyVotacaoFont) window.applyVotacaoFont(key);
+    renderFontSwatches(key);
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ font_pair: key }) });
+      currentSettings.font_pair = key;
+      showToast('Fonte aplicada!');
     } catch (err) {
       showToast(err.message, true);
     }

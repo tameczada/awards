@@ -25,8 +25,23 @@ Com a categoria expandida, digite o nome no campo "Nome da nova opção" e cliqu
 nome).
 
 ## Trocar a imagem de fundo da página inicial
-Aba **Configurações** → **Imagem de fundo da página inicial** → **Escolher imagem…**
-Atualiza na hora, sem precisar de deploy novo.
+Aba **Configurações** → **Fundo da página inicial** → deixe selecionado "Imagem" →
+**Escolher imagem…** Atualiza na hora, sem precisar de deploy novo.
+
+## Usar uma cor sólida no lugar da imagem
+No mesmo painel, clique em **"Cor sólida"**, escolha a cor no seletor (ou digite o
+código hexadecimal, ex: `#16110D`) e clique em **Aplicar cor**. Pra voltar a usar
+imagem, clique em "Imagem" de novo — a última imagem enviada continua salva.
+
+## Trocar o tema de cores
+Aba **Configurações** → **Tema de cores** → escolha uma das paletas prontas (aplica
+na hora) ou clique em **"Personalizado"** pra abrir os seletores de cor individuais:
+destaque principal, destaque claro, cor secundária, fundo da página, fundo dos
+cartões e cor do texto. Depois de ajustar, clique em **Salvar cores personalizadas**.
+
+## Trocar a tipografia
+Aba **Configurações** → **Tipografia** → escolha um dos pares de fonte (título +
+texto). Aplica imediatamente em todo o site, inclusive nos títulos das categorias.
 
 ## Ver apuração antes de encerrar
 Com a categoria expandida no admin, a seção **"Apuração em tempo real"** mostra os

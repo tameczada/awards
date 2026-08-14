@@ -91,6 +91,49 @@
       </div>
 
       <div class="panel">
+        <h3>Fundo da página inicial</h3>
+        <p class="panel-hint">Escolha entre uma imagem ou uma cor sólida como fundo do topo do site.</p>
+        <div class="mode-toggle" id="bg-mode-toggle">
+          <button type="button" class="mode-btn" data-mode="image">Imagem</button>
+          <button type="button" class="mode-btn" data-mode="color">Cor sólida</button>
+        </div>
+
+        <div id="bg-image-panel">
+          <div class="bg-preview" id="bg-preview"></div>
+          <label class="upload-label">
+            <input type="file" id="bg-upload" accept="image/*" hidden />
+            <span class="btn btn-ghost">Escolher imagem…</span>
+          </label>
+          <p class="upload-status" id="bg-status"></p>
+        </div>
+
+        <div id="bg-color-panel" style="display:none">
+          <div class="color-picker-row">
+            <input type="color" id="bg-color-input" value="#16110d" />
+            <input type="text" id="bg-color-hex" placeholder="#16110D" maxlength="7" />
+            <button type="button" class="btn btn-gold" id="bg-color-save">Aplicar cor</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Tema de cores</h3>
+        <p class="panel-hint">Paletas prontas ou personalize cada cor manualmente. Aplica na hora.</p>
+        <div class="theme-swatches" id="theme-swatches"></div>
+
+        <div id="custom-colors-panel" style="display:none">
+          <div class="custom-colors-grid" id="custom-colors-grid"></div>
+          <button type="button" class="btn btn-gold" id="custom-colors-save">Salvar cores personalizadas</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Tipografia</h3>
+        <p class="panel-hint">Escolha o par de fontes usado nos títulos e no texto do site.</p>
+        <div class="font-swatches" id="font-swatches"></div>
+      </div>
+
+      <div class="panel">
         <h3>Textos da página inicial</h3>
         <form id="settings-form">
           <label>Título do site
@@ -101,23 +144,6 @@
           </label>
           <button type="submit" class="btn btn-gold">Salvar textos</button>
         </form>
-      </div>
-
-      <div class="panel">
-        <h3>Tema de cores do site</h3>
-        <p class="panel-hint">Muda os tons de destaque (botões, títulos, barras de resultado) em todo o site. Aplica na hora.</p>
-        <div class="theme-swatches" id="theme-swatches"></div>
-      </div>
-
-      <div class="panel">
-        <h3>Imagem de fundo da página inicial</h3>
-        <p class="panel-hint">Aparece atrás do título, na parte de cima do site. Recomendado: imagem larga (1920×1080 ou maior).</p>
-        <div class="bg-preview" id="bg-preview"></div>
-        <label class="upload-label">
-          <input type="file" id="bg-upload" accept="image/*" hidden />
-          <span class="btn btn-ghost">Escolher imagem…</span>
-        </label>
-        <p class="upload-status" id="bg-status"></p>
       </div>
     </section>
 

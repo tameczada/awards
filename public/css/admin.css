@@ -24,7 +24,7 @@
 
 .auth-card h1 {
   font-family: var(--font-display);
-  font-style: italic;
+  font-style: var(--font-display-style, italic);
   font-weight: 600;
   font-size: 2rem;
   margin: 0.3rem 0 1.6rem;
@@ -103,7 +103,7 @@ textarea { resize: vertical; font-family: var(--font-body); }
 
 .admin-logo h2 {
   font-family: var(--font-display);
-  font-style: italic;
+  font-style: var(--font-display-style, italic);
   font-weight: 600;
   margin: 0.2rem 0 2.4rem;
   font-size: 1.6rem;
@@ -154,7 +154,7 @@ textarea { resize: vertical; font-family: var(--font-body); }
 }
 .admin-tab-head h2 {
   font-family: var(--font-display);
-  font-style: italic;
+  font-style: var(--font-display-style, italic);
   font-weight: 600;
   font-size: 1.9rem;
   margin: 0.3rem 0 0;
@@ -169,7 +169,7 @@ textarea { resize: vertical; font-family: var(--font-body); }
 }
 .panel h3 {
   font-family: var(--font-display);
-  font-style: italic;
+  font-style: var(--font-display-style, italic);
   font-weight: 600;
   margin: 0 0 1.2rem;
   font-size: 1.25rem;
@@ -191,6 +191,105 @@ textarea { resize: vertical; font-family: var(--font-body); }
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 0.78rem;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  background: var(--void-2);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 4px;
+  margin-bottom: 1.2rem;
+}
+.mode-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 1.1rem;
+  border-radius: 100px;
+  cursor: pointer;
+}
+.mode-btn.active { background: var(--gold); color: var(--void); }
+
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.color-picker-row input[type="color"] {
+  width: 48px;
+  height: 44px;
+  padding: 3px;
+  cursor: pointer;
+}
+.color-picker-row input[type="text"] {
+  width: 110px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.custom-colors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1rem;
+  margin: 1.2rem 0 1.4rem;
+}
+.custom-color-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--void-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+.custom-color-field input[type="color"] {
+  width: 34px;
+  height: 34px;
+  padding: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.custom-color-field span {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--cream-dim);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.font-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.8rem;
+}
+.font-swatch {
+  background: var(--void-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.font-swatch:hover { border-color: rgba(203, 161, 53, 0.4); }
+.font-swatch.active { border-color: var(--gold); background: rgba(203, 161, 53, 0.1); }
+.font-swatch-preview {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-bottom: 0.4rem;
+  color: var(--cream);
+}
+.font-swatch-label {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .theme-swatches {
@@ -368,7 +467,7 @@ textarea { resize: vertical; font-family: var(--font-body); }
 }
 .modal-head h3 {
   font-family: var(--font-display);
-  font-style: italic;
+  font-style: var(--font-display-style, italic);
   font-weight: 600;
   font-size: 1.3rem;
   margin: 0;
