@@ -24,7 +24,7 @@
     }
     return id;
   }
-
+  els.toast.style.display="none"
   function showToast(msg, isErr = false) {
     els.toast.style.display="block"
     els.toast.textContent = msg;
