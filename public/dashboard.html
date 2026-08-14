@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard ao vivo — Votação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body class="dashboard-body">
+
+<div id="token-gate" class="token-gate">
+  <div class="token-gate-card">
+    <span class="eyebrow">Acesso necessário</span>
+    <h1>Dashboard ao vivo</h1>
+    <p>Este link precisa de um token de acesso. Copie o link completo no painel
+      admin, em <strong>Configurações → Dashboard ao vivo</strong>.</p>
+  </div>
+</div>
+
+<div id="dashboard-root" class="dashboard-root" style="display:none">
+  <header class="dash-header">
+    <div class="dash-header-left">
+      <span class="live-dot"></span>
+      <span class="eyebrow">Ao vivo</span>
+    </div>
+    <h1 id="dash-title">Apuração em tempo real</h1>
+    <div class="dash-meta">
+      <span id="dash-conn-status" class="conn-status">conectando…</span>
+      <span id="dash-updated-at"></span>
+    </div>
+  </header>
+
+  <main class="dash-grid" id="dash-grid">
+    <div class="loading-state"><div class="spinner"></div>Carregando categorias…</div>
+  </main>
+</div>
+
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
