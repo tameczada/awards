@@ -26,10 +26,12 @@
   }
 
   function showToast(msg, isErr = false) {
+    els.toast.style.display="block"
     els.toast.textContent = msg;
     els.toast.classList.toggle('err', isErr);
     els.toast.classList.add('show');
     setTimeout(() => els.toast.classList.remove('show'), 3200);
+    els.toast.style.display="none"
   }
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve' };
