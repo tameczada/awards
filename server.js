@@ -201,16 +201,17 @@ async function getLiveSnapshot() {
 // dos votos individuais até a revelação (a ordem das opções também não pode
 // vazar o ranking, então em modo censurado usa a ordem de cadastro, não a de votos)
 async function getDashboardPayload() {
-  const { data: cfg, error: cfgErr } = await supabase
-    .from('dashboard_config')
-    .select('focused_category_id, revealed')
-    .eq('id', 1)
-    .single();
+  const { data: cfg, error: cfgErr } = await supabase.from('dashboard_config').select('*').eq('id', 1).single();
   if (cfgErr) throw cfgErr;
+  // select(*) em vez de nomear as colunas: se o schema.sql com as colunas novas
+  // (focused_category_id/revealed) ainda não foi rodado no banco, isso evita que
+  // a consulta quebre inteira — só cai de volta pro modo "mostrar todas".
+  const focusedCategoryId = cfg.focused_category_id || null;
+  const revealed = !!cfg.revealed;
 
   const full = await getLiveSnapshot();
 
-  if (!cfg.focused_category_id) {
+  if (!focusedCategoryId) {
     return {
       focused_category_id: null,
       revealed: false,
@@ -219,7 +220,7 @@ async function getDashboardPayload() {
     };
   }
 
-  const cat = full.rawCategories.find((c) => c.id === cfg.focused_category_id);
+  const cat = full.rawCategories.find((c) => c.id === focusedCategoryId);
   if (!cat) {
     // categoria em foco foi excluída — volta pro modo "mostrar todas"
     return {
@@ -234,7 +235,7 @@ async function getDashboardPayload() {
   const rawOptions = full.optionsByCategory[cat.id] || [];
 
   let options;
-  if (cfg.revealed) {
+  if (revealed) {
     options = rawOptions
       .map((o) => {
         const votes = full.votesByOption[o.id] || 0;
@@ -257,8 +258,8 @@ async function getDashboardPayload() {
   };
 
   return {
-    focused_category_id: cfg.focused_category_id,
-    revealed: cfg.revealed,
+    focused_category_id: focusedCategoryId,
+    revealed,
     category_options: full.categoryOptions,
     categories: [focusedCategory],
   };
@@ -704,6 +705,20 @@ app.post('/api/admin/dashboard-token/regenerate', authRequired, async (req, res)
     .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ token: data.token });
+});
+
+// versão autenticada por JWT admin (não pelo token do dashboard) do mesmo
+// "focus" — usada pra sincronizar o filtro do dashboard quando a categoria
+// ativa da Twitch muda no painel, sem precisar o admin.js saber o token do dashboard
+app.post('/api/admin/dashboard/focus', authRequired, async (req, res) => {
+  const { category_id } = req.body;
+  const { error } = await supabase
+    .from('dashboard_config')
+    .update({ focused_category_id: category_id || null, revealed: false, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  if (error) return res.status(500).json({ error: error.message });
+  broadcastDashboard({ type: 'update' });
+  res.json({ success: true });
 });
 
 // =====================================================

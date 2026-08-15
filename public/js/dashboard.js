@@ -144,6 +144,11 @@
         return;
       }
       const data = await res.json();
+      if (!res.ok) {
+        console.error('Falha ao carregar dashboard:', data.error);
+        els.grid.innerHTML = `<div class="empty-state"><h3>Erro ao carregar categorias</h3><p>${escapeHtml(data.error || 'Tente recarregar a página.')}</p></div>`;
+        return;
+      }
       updateFocusControls(data);
 
       const cats = data.categories || [];
@@ -160,7 +165,8 @@
       }
       els.updatedAt.textContent = `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
     } catch (e) {
-      /* mantém o último snapshot visível em caso de falha pontual */
+      console.error('Erro de rede ao buscar snapshot do dashboard:', e);
+      /* mantém o último snapshot visível em caso de falha pontual de rede */
     }
   }
 

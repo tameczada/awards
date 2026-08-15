@@ -806,7 +806,9 @@
     const value = e.target.value || null;
     try {
       await api('/admin/twitch-config', { method: 'PUT', body: JSON.stringify({ active_category_id: value }) });
-      showToast('Categoria ativa pro chat atualizada!');
+      // a categoria ativa pro chat também vira o foco/filtro do dashboard ao vivo
+      await api('/admin/dashboard/focus', { method: 'POST', body: JSON.stringify({ category_id: value }) });
+      showToast(value ? 'Categoria ativa no chat e no dashboard!' : 'Voltou a mostrar todas as categorias no dashboard');
       renderTwitchOptionNumbers(value);
     } catch (err) {
       showToast(err.message, true);
