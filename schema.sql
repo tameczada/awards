@@ -79,6 +79,7 @@ create table if not exists categories (
   ends_at timestamptz,
   display_order int default 0,
   card_size text not null default 'medio' check (card_size in ('pequeno','medio','grande')),
+  paused boolean not null default false,
   created_at timestamptz default now()
 );
 
@@ -86,6 +87,7 @@ create table if not exists categories (
 alter table categories add column if not exists card_size text not null default 'medio';
 alter table categories drop constraint if exists categories_card_size_check;
 alter table categories add constraint categories_card_size_check check (card_size in ('pequeno','medio','grande'));
+alter table categories add column if not exists paused boolean not null default false;
 
 -- colunas do dashboard_config que dependem de categories já existir (FK)
 alter table dashboard_config add column if not exists focused_category_id uuid references categories(id) on delete set null;

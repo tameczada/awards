@@ -230,6 +230,7 @@ section.categories { padding: 5rem 0 6rem; }
 .ticket-status.aberta { background: rgba(111, 156, 95, 0.22); color: #a9d99a; border: 1px solid rgba(111, 156, 95, 0.4); }
 .ticket-status.encerrada { background: rgba(198, 90, 74, 0.22); color: #e6a99b; border: 1px solid rgba(198, 90, 74, 0.4); }
 .ticket-status.agendada { background: rgba(203, 161, 53, 0.18); color: var(--gold-soft); border: 1px solid rgba(203, 161, 53, 0.4); }
+.ticket-status.pausada { background: rgba(150, 150, 150, 0.22); color: #c9c9c9; border: 1px solid rgba(150, 150, 150, 0.4); }
 
 .ticket-title {
   position: absolute;

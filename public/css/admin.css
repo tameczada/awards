@@ -431,8 +431,9 @@ textarea { resize: vertical; font-family: var(--font-body); }
 .badge.aberta { background: rgba(111, 156, 95, 0.18); color: #a9d99a; }
 .badge.encerrada { background: rgba(198, 90, 74, 0.18); color: #e6a99b; }
 .badge.agendada { background: rgba(203, 161, 53, 0.16); color: var(--gold-soft); }
+.badge.pausada { background: rgba(150, 150, 150, 0.18); color: #c9c9c9; }
 
-.admin-cat-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.admin-cat-actions { display: flex; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
 
 .icon-btn {
   background: var(--void-2);

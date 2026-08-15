@@ -33,7 +33,7 @@
   els.gate.style.display = 'none';
   els.root.style.display = 'block';
 
-  const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve' };
+  const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
 
   function escapeHtml(str) {

@@ -436,6 +436,11 @@
       const card = document.createElement('div');
       card.className = 'admin-cat-card';
       const thumb = cat.image_url ? `style="background-image:url('${cat.image_url}')"` : '';
+      // pausar/retomar só faz sentido enquanto a categoria está (ou estaria) aberta
+      const canPause = cat.status === 'aberta' || cat.status === 'pausada';
+      const pauseBtn = canPause
+        ? `<button class="icon-btn" data-pause="${cat.id}" data-paused="${cat.status === 'pausada'}">${cat.status === 'pausada' ? '▶ retomar' : '⏸ pausar'}</button>`
+        : '';
       card.innerHTML = `
         <div class="admin-cat-head" data-toggle="${cat.id}">
           <div class="admin-cat-thumb" ${thumb}></div>
@@ -445,6 +450,8 @@
           </div>
           <span class="badge ${cat.status}">${cat.status}</span>
           <div class="admin-cat-actions">
+            ${pauseBtn}
+            <button class="icon-btn" data-reset-votes="${cat.id}">zerar votos</button>
             <button class="icon-btn" data-edit="${cat.id}">editar</button>
             <button class="icon-btn danger" data-delete="${cat.id}">excluir</button>
           </div>
@@ -466,6 +473,35 @@
     els.catList.querySelectorAll('[data-delete]').forEach((btn) => {
       btn.addEventListener('click', () => deleteCategory(btn.dataset.delete));
     });
+    els.catList.querySelectorAll('[data-pause]').forEach((btn) => {
+      btn.addEventListener('click', () => toggleCategoryPause(btn.dataset.pause, btn.dataset.paused === 'true'));
+    });
+    els.catList.querySelectorAll('[data-reset-votes]').forEach((btn) => {
+      btn.addEventListener('click', () => resetCategoryVotes(btn.dataset.resetVotes));
+    });
+  }
+
+  async function toggleCategoryPause(id, isPaused) {
+    try {
+      await api(`/admin/categories/${id}/pause`, { method: 'POST', body: JSON.stringify({ paused: !isPaused }) });
+      showToast(isPaused ? 'Votação retomada!' : 'Votação pausada!');
+      await loadCategoriesAdmin();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function resetCategoryVotes(id) {
+    const cat = categoriesCache.find((c) => c.id === id);
+    if (!confirm(`Zerar todos os votos de "${cat ? cat.name : 'esta categoria'}"? Essa ação não pode ser desfeita.`)) return;
+    try {
+      await api(`/admin/categories/${id}/reset-votes`, { method: 'POST' });
+      showToast('Votos zerados!');
+      await loadCategoriesAdmin();
+      await refreshOpenBody();
+    } catch (err) {
+      showToast(err.message, true);
+    }
   }
 
   async function toggleCategoryBody(id) {

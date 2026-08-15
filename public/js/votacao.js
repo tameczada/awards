@@ -32,7 +32,7 @@
     setTimeout(() => els.toast.classList.remove('show'), 3200);
   }
 
-  const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve' };
+  const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
 
   function fmtDate(iso) {
     if (!iso) return null;
@@ -74,7 +74,7 @@
       <div class="ticket-body">
         <p class="ticket-desc">${escapeHtml(cat.description || '')}</p>
         <div class="ticket-foot">
-          <span>${cat.status === 'encerrada' ? 'ver resultado' : cat.status === 'agendada' ? fmtDate(cat.starts_at) || 'a definir' : 'vote agora'}</span>
+          <span>${cat.status === 'encerrada' ? 'ver resultado' : cat.status === 'agendada' ? fmtDate(cat.starts_at) || 'a definir' : cat.status === 'pausada' ? 'votação pausada' : 'vote agora'}</span>
           <span class="ticket-cta">abrir →</span>
         </div>
       </div>
@@ -131,6 +131,8 @@
         renderResults(cat);
       } else if (cat.status === 'agendada') {
         renderScheduled(cat);
+      } else if (cat.status === 'pausada') {
+        renderPaused(cat);
       } else {
         const statusRes = await fetch(`${API}/vote/status/${id}?voter_id=${getVoterId()}`);
         const voteStatus = await statusRes.json();
@@ -155,6 +157,20 @@
           <h2>${escapeHtml(cat.name)}</h2>
           <p>${escapeHtml(cat.description || '')}</p>
           <p class="eyebrow" style="margin-top:1.2rem">${cat.starts_at ? 'abre em ' + fmtDate(cat.starts_at) : 'data a definir'}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPaused(cat) {
+    els.detailContent.innerHTML = `
+      <div class="detail-header">
+        ${posterBlock(cat)}
+        <div class="detail-info">
+          <span class="eyebrow">Votação pausada</span>
+          <h2>${escapeHtml(cat.name)}</h2>
+          <p>${escapeHtml(cat.description || '')}</p>
+          <p class="eyebrow" style="margin-top:1.2rem">a organização pausou os votos temporariamente — tente de novo em instantes</p>
         </div>
       </div>
     `;

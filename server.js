@@ -126,6 +126,9 @@ function computeStatus(cat) {
   if (cat.status === 'encerrada') return 'encerrada';
   if (cat.ends_at && new Date(cat.ends_at) < now) return 'encerrada';
   if (cat.starts_at && new Date(cat.starts_at) > now) return 'agendada';
+  // pausa manual: só faz sentido enquanto a categoria estaria aberta;
+  // se já encerrou ou ainda não começou, os casos acima já resolveram antes
+  if (cat.paused) return 'pausada';
   // já passou do horário de início (e não passou do fim, ou não tem fim definido)
   // então a categoria abre sozinha, mesmo que o status manual ainda esteja "agendada"
   if (cat.starts_at) return 'aberta';
@@ -293,7 +296,7 @@ app.get('/api/categories', async (req, res) => {
   res.set('Cache-Control', 'no-store');
   const { data, error } = await supabase
     .from('categories')
-    .select('id, name, description, image_url, status, starts_at, ends_at, display_order, card_size')
+    .select('id, name, description, image_url, status, starts_at, ends_at, display_order, card_size, paused')
     .order('display_order', { ascending: true })
     .order('created_at', { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
@@ -562,6 +565,33 @@ app.put('/api/admin/categories/:id', authRequired, async (req, res) => {
 app.delete('/api/admin/categories/:id', authRequired, async (req, res) => {
   const { id } = req.params;
   const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  scheduleDashboardUpdate();
+  res.json({ success: true });
+});
+
+// pausa ou retoma a votação de uma categoria (ninguém consegue votar
+// enquanto pausada, mesmo com o horário agendado ainda dentro da janela)
+// sem precisar mexer no status/agendamento da categoria
+app.post('/api/admin/categories/:id/pause', authRequired, async (req, res) => {
+  const { id } = req.params;
+  const { paused } = req.body;
+  const { data, error } = await supabase
+    .from('categories')
+    .update({ paused: !!paused })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  scheduleDashboardUpdate();
+  res.json({ ...data, status: computeStatus(data) });
+});
+
+// apaga todos os votos de uma categoria (zera a contagem), sem apagar a
+// categoria nem as opções cadastradas
+app.post('/api/admin/categories/:id/reset-votes', authRequired, async (req, res) => {
+  const { id } = req.params;
+  const { error } = await supabase.from('votes').delete().eq('category_id', id);
   if (error) return res.status(500).json({ error: error.message });
   scheduleDashboardUpdate();
   res.json({ success: true });
