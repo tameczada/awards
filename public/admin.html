@@ -182,9 +182,7 @@
         </p>
         <p class="panel-hint">
           Pra gerar o token OAuth do bot: crie ou use uma conta Twitch pro bot,
-          acesse <a href="https://twitchtokengenerator.com" target="_blank" rel="noopener">twitchtokengenerator.com</a>,
-          gere um token do tipo "Bot Chat Token" (escopos chat:read e chat:edit) e
-          cole abaixo, junto com o "oauth:" no início (se vier separado).
+          acesse <a href="https://twitchtokengenerator.com" target="_blank" rel="noopener"></a>
         </p>
       </div>
 
@@ -211,6 +209,12 @@
           <button type="button" class="btn btn-gold" id="twitch-connect-btn">Conectar bot</button>
           <button type="button" class="btn btn-ghost" id="twitch-disconnect-btn">Desconectar</button>
         </div>
+      </div>
+      <div class="panel">
+        <h3>Categoria ativa para votos no chat</h3>
+        <p class="panel-hint">Só categorias com status "Aberta" aparecem aqui. Os espectadores votam pelo número da lista abaixo. Escolher uma categoria aqui também filtra o <strong>dashboard ao vivo</strong> pra mostrar só ela (censurada até você revelar); escolher "— nenhuma —" volta o dashboard a mostrar todas.</p>
+        <select id="twitch-active-category"></select>
+        <div id="twitch-option-numbers" class="twitch-option-numbers"></div>
       </div>
     </section>
 
