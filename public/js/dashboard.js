@@ -2,6 +2,18 @@
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
 
+  // aplica o mesmo tema/cores/fonte definidos no admin (Configurações → Aparência)
+  // — /api/settings é público, não depende do token do dashboard
+  async function loadSettings() {
+    try {
+      const res = await fetch('/api/settings', { cache: 'no-store' });
+      const s = await res.json();
+      if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme, s.custom_colors);
+      if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
+    } catch (e) { /* segue com o tema padrão */ }
+  }
+  loadSettings();
+
   const els = {
     gate: document.getElementById('token-gate'),
     root: document.getElementById('dashboard-root'),
