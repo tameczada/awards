@@ -184,6 +184,30 @@
   color: var(--cream-dim);
 }
 
+/* ===== CONTAGEM REGRESSIVA (prazo de encerramento) ===== */
+.dash-countdown {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-soft);
+  border: 1px solid rgba(203, 161, 53, 0.35);
+  background: rgba(203, 161, 53, 0.1);
+  border-radius: 100px;
+  padding: 0.25rem 0.7rem;
+}
+.dash-countdown.ending-soon {
+  color: #e6a99b;
+  border-color: rgba(198, 90, 74, 0.5);
+  background: rgba(198, 90, 74, 0.14);
+  animation: countdown-pulse 1s ease-in-out infinite;
+}
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 .dash-options { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.7rem; }
 
 /* ===== TAMANHO DO CARD (escolhido por categoria no painel admin) ===== */
@@ -300,4 +324,5 @@
   .dash-bar-fill { transition: none; }
   .dash-option.censored .dash-bar-track { animation: none; }
   .dash-card.revealing { animation: none; }
+  .dash-countdown.ending-soon { animation: none; }
 }

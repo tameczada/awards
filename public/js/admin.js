@@ -491,6 +491,45 @@
     }
   }
 
+  async function startCountdown(id) {
+    const minutes = Number($(`countdown-minutes-${id}`).value) || 0;
+    const seconds = Number($(`countdown-seconds-${id}`).value) || 0;
+    const totalMs = (minutes * 60 + seconds) * 1000;
+    if (totalMs <= 0) {
+      showToast('Digite quanto tempo a votação deve durar', true);
+      return;
+    }
+    const endsAt = new Date(Date.now() + totalMs).toISOString();
+    const durationLabel = [
+      minutes > 0 ? `${minutes} min` : null,
+      seconds > 0 ? `${seconds}s` : null,
+    ].filter(Boolean).join(' ');
+    try {
+      // abre a categoria agora (limpa qualquer agendamento futuro de início e
+      // despausa), com o prazo de encerramento calculado a partir do tempo digitado
+      await api(`/admin/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'aberta', starts_at: null, ends_at: endsAt, paused: false }),
+      });
+      showToast(`Votação aberta por ${durationLabel}!`);
+      await loadCategoriesAdmin();
+      await refreshOpenBody();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function cancelCountdown(id) {
+    try {
+      await api(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify({ ends_at: null }) });
+      showToast('Prazo removido — a categoria fica aberta até você encerrar manualmente.');
+      await loadCategoriesAdmin();
+      await refreshOpenBody();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
   async function resetCategoryVotes(id) {
     const cat = categoriesCache.find((c) => c.id === id);
     if (!confirm(`Zerar todos os votos de "${cat ? cat.name : 'esta categoria'}"? Essa ação não pode ser desfeita.`)) return;
@@ -552,6 +591,14 @@
         `;
       }
 
+      const now = Date.now();
+      const endsMs = cat.ends_at ? new Date(cat.ends_at).getTime() : null;
+      const countdownStatusHtml = endsMs
+        ? (endsMs > now
+            ? `<span class="ticket-desc">prazo atual: encerra às ${new Date(endsMs).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>`
+            : `<span class="ticket-desc">prazo já venceu</span>`)
+        : `<span class="ticket-desc">sem prazo definido — fica aberta até você encerrar manualmente</span>`;
+
       body.innerHTML = `
         <div class="cat-image-row">
           <div class="admin-cat-thumb" ${cat.image_url ? `style="background-image:url('${cat.image_url}')"` : ''}></div>
@@ -559,6 +606,17 @@
             <input type="file" accept="image/*" hidden id="cat-image-${id}" />
             <span class="btn btn-ghost">Trocar imagem da categoria</span>
           </label>
+        </div>
+        <div class="countdown-admin-row">
+          <label>Encerrar em
+            <input type="number" min="0" step="1" placeholder="min" id="countdown-minutes-${id}" />
+          </label>
+          <label>
+            <input type="number" min="0" max="59" step="1" placeholder="seg" id="countdown-seconds-${id}" />
+          </label>
+          <button class="btn btn-ghost" id="countdown-start-${id}">▶ iniciar votação com esse prazo</button>
+          ${cat.ends_at ? `<button class="icon-btn danger" id="countdown-cancel-${id}">cancelar prazo</button>` : ''}
+          ${countdownStatusHtml}
         </div>
         <div class="options-admin-list">${optionsHtml || '<p class="ticket-desc">Nenhuma opção ainda.</p>'}</div>
         <div class="add-option-row">
@@ -569,6 +627,12 @@
       `;
 
       $(`cat-image-${id}`).addEventListener('change', (e) => uploadCategoryImage(id, e.target.files[0], e.target));
+      $(`countdown-start-${id}`).addEventListener('click', () => startCountdown(id));
+      $(`countdown-minutes-${id}`).addEventListener('keydown', (e) => { if (e.key === 'Enter') startCountdown(id); });
+      $(`countdown-seconds-${id}`).addEventListener('keydown', (e) => { if (e.key === 'Enter') startCountdown(id); });
+      if (cat.ends_at) {
+        $(`countdown-cancel-${id}`).addEventListener('click', () => cancelCountdown(id));
+      }
 
       body.querySelectorAll('[data-option-name]').forEach((input) => {
         input.addEventListener('blur', () => updateOptionName(input.dataset.optionName, input.value));

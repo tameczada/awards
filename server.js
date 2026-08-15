@@ -197,7 +197,7 @@ async function getLiveSnapshot() {
         return { id: o.id, name: o.name, image_url: o.image_url, votes, percent: total ? Math.round((votes / total) * 1000) / 10 : 0 };
       })
       .sort((a, b) => b.votes - a.votes);
-    return { id: cat.id, name: cat.name, image_url: cat.image_url, card_size: cat.card_size, status: computeStatus(cat), total_votes: total, options };
+    return { id: cat.id, name: cat.name, image_url: cat.image_url, card_size: cat.card_size, ends_at: cat.ends_at, status: computeStatus(cat), total_votes: total, options };
   });
 
   return { categoryOptions, categories, optionsByCategory, votesByOption, votesByCategory, rawCategories: catsRes.data || [] };
@@ -259,6 +259,7 @@ async function getDashboardPayload() {
     name: cat.name,
     image_url: cat.image_url,
     card_size: cat.card_size,
+    ends_at: cat.ends_at,
     status: computeStatus(cat),
     total_votes: total,
     options,
@@ -543,7 +544,7 @@ app.post('/api/admin/categories', authRequired, async (req, res) => {
 
 app.put('/api/admin/categories/:id', authRequired, async (req, res) => {
   const { id } = req.params;
-  const { name, description, status, starts_at, ends_at, display_order, card_size } = req.body;
+  const { name, description, status, starts_at, ends_at, display_order, card_size, paused } = req.body;
   if (card_size !== undefined && !['pequeno', 'medio', 'grande'].includes(card_size)) {
     return res.status(400).json({ error: 'Tamanho de card inválido' });
   }
@@ -555,6 +556,7 @@ app.put('/api/admin/categories/:id', authRequired, async (req, res) => {
   if (ends_at !== undefined) update.ends_at = ends_at || null;
   if (display_order !== undefined) update.display_order = display_order;
   if (card_size !== undefined) update.card_size = card_size;
+  if (paused !== undefined) update.paused = !!paused;
 
   const { data, error } = await supabase.from('categories').update(update).eq('id', id).select().single();
   if (error) return res.status(500).json({ error: error.message });
