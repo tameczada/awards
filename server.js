@@ -124,8 +124,11 @@ function getClientIp(req) {
 function computeStatus(cat) {
   const now = new Date();
   if (cat.status === 'encerrada') return 'encerrada';
-  if (cat.starts_at && new Date(cat.starts_at) > now) return 'agendada';
   if (cat.ends_at && new Date(cat.ends_at) < now) return 'encerrada';
+  if (cat.starts_at && new Date(cat.starts_at) > now) return 'agendada';
+  // já passou do horário de início (e não passou do fim, ou não tem fim definido)
+  // então a categoria abre sozinha, mesmo que o status manual ainda esteja "agendada"
+  if (cat.starts_at) return 'aberta';
   if (cat.status === 'aberta') return 'aberta';
   return cat.status;
 }
