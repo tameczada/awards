@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Votação Oficial</title>
+<meta name="description" content="Vote nas suas categorias favoritas." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<header class="hero" id="hero">
+  <div class="wrap">
+    <div class="hero-eyebrow"><span class="rule"></span><span class="eyebrow">Votação aberta ao público</span></div>
+    <h1 id="site-title">Votação Oficial</h1>
+    <p class="lede" id="site-subtitle">Escolha suas favoritas em cada categoria.</p>
+    <div class="hero-meta">
+      <div><strong id="meta-total-cat">—</strong>categorias</div>
+      <div><strong id="meta-open">—</strong>abertas agora</div>
+      <div><strong id="meta-closed">—</strong>encerradas</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="categories" id="list-view">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Categorias</span>
+        <h2>Onde seu voto entra em cena</h2>
+      </div>
+    </div>
+    <div id="categories-container">
+      <div class="loading-state"><div class="spinner"></div>Carregando categorias…</div>
+    </div>
+  </section>
+
+  <section class="detail-view" id="detail-view">
+    <button class="back-link" id="back-btn">← voltar para categorias</button>
+    <div id="detail-content"></div>
+  </section>
+
+</main>
+
+<footer>
+  Feito com bastidores, votos e um pouco de purpurina dourada.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/themes.js"></script>
+<script src="/js/votacao.js"></script>
+</body>
+</html>
