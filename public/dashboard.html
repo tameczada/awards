@@ -28,14 +28,18 @@
         <span class="live-dot"></span>
         <span class="eyebrow">Ao vivo</span>
       </div>
-      
-      <div class="dash-focus-control">
-              <div class="panel">
+
+            <div class="panel">
         <h3>Categoria ativa para votos no chat</h3>
         <p class="panel-hint">Só categorias com status "Aberta" aparecem aqui. Os espectadores votam pelo número da lista abaixo. Escolher uma categoria aqui também filtra o <strong>dashboard ao vivo</strong> pra mostrar só ela (censurada até você revelar); escolher "— nenhuma —" volta o dashboard a mostrar todas.</p>
         <select id="twitch-active-category"></select>
         <div id="twitch-option-numbers" class="twitch-option-numbers"></div>
-              </div>
+            </div>
+      
+      <div class="dash-focus-control">
+        <select id="dash-focus-select">
+          <option value="">Mostrar todas as categorias</option>
+        </select>
         <button type="button" class="btn btn-gold" id="dash-reveal-btn" style="display:none">Revelar resultado</button>
         <button type="button" class="dash-link-btn" id="dash-hide-btn" style="display:none">recensurar</button>
       </div>
@@ -52,7 +56,8 @@
   </main>
 </div>
 
-<script src="/js/dashboard.js"></script>
+<script src="/js/themes.js"></script>
+<script src="/js/dashboard.js"></>
 <script src="/js/admin.js"></script>
 </body>
 </html>
