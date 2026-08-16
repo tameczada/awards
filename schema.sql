@@ -30,6 +30,7 @@ create table if not exists site_settings (
   theme text default 'premiere',
   custom_colors jsonb,
   font_pair text default 'classic',
+  dashboard_bg_from_card boolean not null default false,
   updated_at timestamptz default now(),
   constraint single_row check (id = 1)
 );
@@ -43,6 +44,7 @@ alter table site_settings add column if not exists background_mode text default 
 alter table site_settings add column if not exists background_color text;
 alter table site_settings add column if not exists custom_colors jsonb;
 alter table site_settings add column if not exists font_pair text default 'classic';
+alter table site_settings add column if not exists dashboard_bg_from_card boolean not null default false;
 
 -- =====================================================
 -- TABELA: dashboard_config

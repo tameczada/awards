@@ -2,6 +2,8 @@
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
 
+  let dashboardBgFromCard = false;
+
   // aplica o mesmo tema/cores/fonte definidos no admin (Configurações → Aparência)
   // — /api/settings é público, não depende do token do dashboard
   async function loadSettings() {
@@ -10,9 +12,11 @@
       const s = await res.json();
       if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme, s.custom_colors);
       if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
+      dashboardBgFromCard = !!s.dashboard_bg_from_card;
     } catch (e) { /* segue com o tema padrão */ }
   }
   loadSettings();
+  setInterval(loadSettings, 20000); // pega a tempo se o admin ligar/desligar a opção
 
   const els = {
     gate: document.getElementById('token-gate'),
@@ -29,6 +33,7 @@
     voteNumbers: document.getElementById('dash-vote-numbers'),
     nextBar: document.getElementById('dash-next-bar'),
     nextName: document.getElementById('dash-next-name'),
+    bgBlur: document.getElementById('dash-bg-blur'),
   };
 
   if (!token) {
@@ -251,6 +256,20 @@
   }
   setInterval(tickCountdowns, 1000);
 
+  // fundo desfocado com a imagem da categoria em foco (opcional, liga no admin)
+  let lastBgImage;
+  function updateBgBlur(imageUrl) {
+    const wanted = dashboardBgFromCard && imageUrl ? imageUrl : null;
+    if (wanted === lastBgImage) return;
+    lastBgImage = wanted;
+    if (wanted) {
+      els.bgBlur.style.backgroundImage = `url('${wanted}')`;
+      els.bgBlur.classList.add('active');
+    } else {
+      els.bgBlur.classList.remove('active');
+    }
+  }
+
   async function fetchSnapshot() {
     try {
       const res = await fetch(`/api/dashboard/live?token=${encodeURIComponent(token)}`, { cache: 'no-store' });
@@ -274,6 +293,9 @@
       lastFocusedId = data.focused_category_id;
 
       els.grid.classList.toggle('focused', isFocusedMode);
+
+      const focusedCat = isFocusedMode ? cats.find((c) => c.id === data.focused_category_id) : null;
+      updateBgBlur(focusedCat ? focusedCat.image_url : null);
 
       if (!cats.length) {
         els.grid.innerHTML = `<div class="empty-state"><h3>Nenhuma categoria ainda</h3></div>`;

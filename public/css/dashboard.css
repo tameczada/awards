@@ -4,6 +4,23 @@
   padding-bottom: 3.2rem; /* espaço pra tarjinha "a seguir" fixa não cobrir o último card */
 }
 
+/* ===== FUNDO DESFOCADO (imagem da categoria em foco, opcional) ===== */
+.dash-bg-blur {
+  position: fixed;
+  inset: -60px; /* maior que a viewport pra esconder a borda desfocada */
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(46px) brightness(0.5) saturate(1.1);
+  opacity: 0;
+  transition: opacity 0.6s ease, background-image 0.6s ease;
+  pointer-events: none;
+}
+.dash-bg-blur.active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .dash-bg-blur { transition: none; }
+}
+
 /* ===== TARJINHA "A SEGUIR" (rodapé) ===== */
 .dash-next-bar {
   position: fixed;

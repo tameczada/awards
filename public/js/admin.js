@@ -185,10 +185,23 @@
       // tipografia
       if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
       renderFontSwatches(s.font_pair || 'classic');
+
+      // fundo do dashboard = imagem da categoria em foco (desfocada)
+      $('dashboard-bg-toggle').checked = !!s.dashboard_bg_from_card;
     } catch (err) {
       showToast(err.message, true);
     }
   }
+
+  $('dashboard-bg-toggle').addEventListener('change', async (e) => {
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_bg_from_card: e.target.checked }) });
+      showToast(e.target.checked ? 'Fundo do dashboard agora usa a imagem da categoria!' : 'Fundo do dashboard voltou ao padrão.');
+    } catch (err) {
+      e.target.checked = !e.target.checked;
+      showToast(err.message, true);
+    }
+  });
 
   // ===== FUNDO: IMAGEM OU COR =====
   function setBgMode(mode, { silent = false } = {}) {
