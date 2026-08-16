@@ -27,6 +27,8 @@
     revealBtn: document.getElementById('dash-reveal-btn'),
     hideBtn: document.getElementById('dash-hide-btn'),
     voteNumbers: document.getElementById('dash-vote-numbers'),
+    nextBar: document.getElementById('dash-next-bar'),
+    nextName: document.getElementById('dash-next-name'),
   };
 
   if (!token) {
@@ -118,6 +120,16 @@
     const noCats = currentCategoryOptions.length === 0;
     els.prevBtn.disabled = noCats;
     els.nextBtn.disabled = noCats;
+
+    // tarjinha "a seguir" no rodapé: só faz sentido com uma categoria em foco
+    // e mais de uma categoria cadastrada (senão "a seguir" seria ela mesma)
+    if (navIdx !== -1 && currentCategoryOptions.length > 1) {
+      const nextIdx = (navIdx + 1) % currentCategoryOptions.length;
+      els.nextName.textContent = currentCategoryOptions[nextIdx].name;
+      els.nextBar.style.display = 'flex';
+    } else {
+      els.nextBar.style.display = 'none';
+    }
 
     // a categoria escolhida acima também é a categoria ativa pro voto via
     // chat da Twitch (!votar N) — mostra a numeração das opções aqui

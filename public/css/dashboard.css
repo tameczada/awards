@@ -1,6 +1,43 @@
 .dashboard-body {
   background: var(--void);
   min-height: 100vh;
+  padding-bottom: 3.2rem; /* espaço pra tarjinha "a seguir" fixa não cobrir o último card */
+}
+
+/* ===== TARJINHA "A SEGUIR" (rodapé) ===== */
+.dash-next-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  background: rgba(10, 8, 6, 0.72);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid var(--line);
+  animation: next-bar-in 0.4s ease;
+}
+.dash-next-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dash-next-name {
+  font-family: var(--font-display);
+  font-style: var(--font-display-style, italic);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--gold-soft);
+}
+@keyframes next-bar-in {
+  0% { opacity: 0; transform: translateY(100%); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== TELA DE TOKEN AUSENTE ===== */
@@ -360,4 +397,5 @@
   .dash-card.revealing { animation: none; }
   .dash-countdown.ending-soon { animation: none; }
   .dash-card.entering { animation: none; }
+  .dash-next-bar { animation: none; }
 }
