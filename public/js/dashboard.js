@@ -71,7 +71,7 @@
   els.curtainBtn.addEventListener('click', () => {
     playCurtainFanfare();
     els.curtainOverlay.classList.add('open');
-    setTimeout(() => els.curtainOverlay.classList.add('hidden'), 1200);
+    setTimeout(() => els.curtainOverlay.classList.add('hidden'), 2500);
   });
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
