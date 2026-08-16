@@ -71,7 +71,11 @@
   els.curtainBtn.addEventListener('click', () => {
     playCurtainFanfare();
     els.curtainOverlay.classList.add('open');
-    setTimeout(() => els.curtainOverlay.classList.add('hidden'), 2500);
+    // espera a transição terminar (3.6s + atraso de 0.2s do painel direito) antes
+    // de tirar a cortina de vez — via inline style, não só classe, senão o estilo
+    // inline que a mostrou (style.display='flex') continua vencendo e ela some
+    // visualmente mas fica travando clique em tudo por baixo pra sempre
+    setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 4000);
   });
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
