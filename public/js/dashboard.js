@@ -34,6 +34,8 @@
     nextBar: document.getElementById('dash-next-bar'),
     nextName: document.getElementById('dash-next-name'),
     bgBlur: document.getElementById('dash-bg-blur'),
+    curtainOverlay: document.getElementById('curtain-overlay'),
+    curtainBtn: document.getElementById('curtain-btn'),
   };
 
   if (!token) {
@@ -42,6 +44,35 @@
   }
   els.gate.style.display = 'none';
   els.root.style.display = 'block';
+
+  // ===== cortina de abertura =====
+  els.curtainOverlay.style.display = 'flex';
+  function playCurtainFanfare() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+      const notes = [261.63, 329.63, 392.0, 523.25]; // dó·mi·sol·dó — arpejo simples de abertura
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        const start = now + i * 0.12;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.55);
+      });
+    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som */ }
+  }
+  els.curtainBtn.addEventListener('click', () => {
+    playCurtainFanfare();
+    els.curtainOverlay.classList.add('open');
+    setTimeout(() => els.curtainOverlay.classList.add('hidden'), 1200);
+  });
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
