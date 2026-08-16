@@ -429,20 +429,25 @@
 }
 
 .dash-grid.focused {
-  grid-template-columns: 1fr;
-  max-width: 640px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
 }
 .dash-grid.focused .dash-card {
+  width: 100%;
   padding: 2.2rem 2.4rem 2.6rem;
-  grid-column: span 1; /* modo foco é sempre uma coluna só, "grande" não precisa ocupar 2 */
 }
-/* o modo foco (uma categoria só, em destaque) ainda respeita o tamanho
-   escolhido no admin, só numa escala maior que o modo grade normal */
-.dash-grid.focused .dash-card.size-pequeno { min-height: 220px; }
-.dash-grid.focused .dash-card.size-medio { min-height: 320px; }
-.dash-grid.focused .dash-card.size-grande { min-height: 440px; }
+/* no modo foco (uma categoria só, em destaque), o tamanho escolhido no admin
+   agora também controla a LARGURA do card, não só a altura — antes ficava
+   sempre travado em 640px de largura não importa o tamanho escolhido */
+.dash-grid.focused .dash-card.size-pequeno { max-width: 480px; min-height: 240px; }
+.dash-grid.focused .dash-card.size-medio { max-width: 760px; min-height: 360px; }
+.dash-grid.focused .dash-card.size-grande { max-width: 1140px; min-height: 480px; }
 .dash-grid.focused .dash-card-title h2 { font-size: 1.9rem; }
+
+@media (max-width: 860px) {
+  .dash-grid.focused .dash-card.size-medio,
+  .dash-grid.focused .dash-card.size-grande { max-width: 100%; }
+}
 
 .dash-option.censored .dash-option-name { color: var(--cream-dim); }
 .dash-option.censored .dash-bar-track {
