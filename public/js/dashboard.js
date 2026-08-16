@@ -53,7 +53,7 @@
       const ctx = new Ctx();
       const now = ctx.currentTime;
       const master = ctx.createGain();
-      master.gain.value = 0.50;
+      master.gain.value = 0.20;
       master.connect(ctx.destination);
 
       // "sopro" de tecido abrindo: ruído filtrado com o tom caindo,
