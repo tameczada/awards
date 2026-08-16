@@ -21,6 +21,9 @@
     connStatus: document.getElementById('dash-conn-status'),
     updatedAt: document.getElementById('dash-updated-at'),
     focusSelect: document.getElementById('dash-focus-select'),
+    prevBtn: document.getElementById('dash-prev-btn'),
+    nextBtn: document.getElementById('dash-next-btn'),
+    navIndicator: document.getElementById('dash-nav-indicator'),
     revealBtn: document.getElementById('dash-reveal-btn'),
     hideBtn: document.getElementById('dash-hide-btn'),
     voteNumbers: document.getElementById('dash-vote-numbers'),
@@ -35,6 +38,7 @@
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
+  let lastFocusedId; // pra disparar a transição de entrada só quando a categoria em foco muda
 
   function escapeHtml(str) {
     const p = document.createElement('p');
@@ -75,11 +79,26 @@
   els.revealBtn.addEventListener('click', () => postAction('/api/dashboard/reveal'));
   els.hideBtn.addEventListener('click', () => postAction('/api/dashboard/hide'));
 
+  // navega pra categoria anterior/próxima da lista (mesma ordem do dropdown);
+  // partindo de "mostrar todas", → vai pra primeira e ← vai pra última
+  let currentCategoryOptions = [];
+  function navigateCategory(direction) {
+    if (!currentCategoryOptions.length) return;
+    const idx = currentCategoryOptions.findIndex((c) => c.id === els.focusSelect.value);
+    const nextIdx = idx === -1
+      ? (direction === 1 ? 0 : currentCategoryOptions.length - 1)
+      : (idx + direction + currentCategoryOptions.length) % currentCategoryOptions.length;
+    postAction('/api/dashboard/focus', { category_id: currentCategoryOptions[nextIdx].id });
+  }
+  els.prevBtn.addEventListener('click', () => navigateCategory(-1));
+  els.nextBtn.addEventListener('click', () => navigateCategory(1));
+
   function updateFocusControls(data) {
+    currentCategoryOptions = data.category_options || [];
     // só reconstrói as options do select se a lista de categorias mudou,
     // pra não perder o foco do usuário no dropdown a cada refresh
     const wanted = ['<option value="">Mostrar todas as categorias</option>']
-      .concat((data.category_options || []).map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`))
+      .concat(currentCategoryOptions.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`))
       .join('');
     if (els.focusSelect.dataset.rendered !== wanted) {
       els.focusSelect.innerHTML = wanted;
@@ -91,9 +110,18 @@
     els.revealBtn.style.display = hasFocus && !data.revealed ? 'inline-flex' : 'none';
     els.hideBtn.style.display = hasFocus && data.revealed ? 'inline-block' : 'none';
 
+    // indicador "N / total" de qual categoria está em foco na lista
+    const navIdx = currentCategoryOptions.findIndex((c) => c.id === data.focused_category_id);
+    els.navIndicator.textContent = navIdx !== -1
+      ? `${navIdx + 1} / ${currentCategoryOptions.length}`
+      : (currentCategoryOptions.length ? `todas · ${currentCategoryOptions.length}` : '');
+    const noCats = currentCategoryOptions.length === 0;
+    els.prevBtn.disabled = noCats;
+    els.nextBtn.disabled = noCats;
+
     // a categoria escolhida acima também é a categoria ativa pro voto via
     // chat da Twitch (!votar N) — mostra a numeração das opções aqui
-    const catInfo = (data.category_options || []).find((c) => c.id === data.focused_category_id);
+    const catInfo = currentCategoryOptions.find((c) => c.id === data.focused_category_id);
     renderVoteNumbers(data.focused_category_id, catInfo ? catInfo.status : null);
   }
 
@@ -152,7 +180,7 @@
     `;
   }
 
-  function renderCard(cat, isFocusedMode, revealed, justRevealed) {
+  function renderCard(cat, isFocusedMode, revealed, justRevealed, entering) {
     const hasBg = !!cat.image_url;
     const bgStyle = hasBg ? ` style="background-image:url('${cat.image_url}')"` : '';
     const sizeClass = `size-${cat.card_size === 'pequeno' || cat.card_size === 'grande' ? cat.card_size : 'medio'}`;
@@ -176,7 +204,7 @@
       : `${STATUS_LABEL[cat.status] || cat.status} · ${cat.total_votes} voto${cat.total_votes === 1 ? '' : 's'}`;
 
     return `
-      <article class="dash-card ${sizeClass} ${hasBg ? 'has-bg' : ''} ${justRevealed ? 'revealing' : ''}"${bgStyle}>
+      <article class="dash-card ${sizeClass} ${hasBg ? 'has-bg' : ''} ${justRevealed ? 'revealing' : ''} ${entering ? 'entering' : ''}"${bgStyle}>
         <div class="dash-card-head">
           <div class="dash-card-title">
             <h2>${escapeHtml(cat.name)}</h2>
@@ -230,13 +258,15 @@
       const isFocusedMode = !!data.focused_category_id;
       const justRevealed = isFocusedMode && data.revealed && !lastRevealed;
       lastRevealed = isFocusedMode ? data.revealed : false;
+      const focusChanged = data.focused_category_id !== lastFocusedId;
+      lastFocusedId = data.focused_category_id;
 
       els.grid.classList.toggle('focused', isFocusedMode);
 
       if (!cats.length) {
         els.grid.innerHTML = `<div class="empty-state"><h3>Nenhuma categoria ainda</h3></div>`;
       } else {
-        els.grid.innerHTML = cats.map((c) => renderCard(c, isFocusedMode, data.revealed, justRevealed)).join('');
+        els.grid.innerHTML = cats.map((c) => renderCard(c, isFocusedMode, data.revealed, justRevealed, isFocusedMode && focusChanged)).join('');
         tickCountdowns(); // evita esperar 1s pro primeiro texto do contador aparecer
       }
       els.updatedAt.textContent = `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
