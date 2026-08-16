@@ -171,10 +171,12 @@
   }
 
   function renderOption(o, index, isFocusedMode, revealed, maxVotes) {
+    const thumb = o.image_url ? `<span class="dash-option-thumb" style="background-image:url('${o.image_url}')"></span>` : '';
     if (isFocusedMode && !revealed) {
       return `
         <div class="dash-option censored">
           <div class="dash-option-top">
+            ${thumb}
             <span class="dash-option-name">${escapeHtml(o.name)}</span>
             <span class="censor-lock">🔒 em segredo</span>
           </div>
@@ -189,6 +191,7 @@
     return `
       <div class="dash-option ${isLeader ? 'leader' : ''}">
         <div class="dash-option-top">
+          ${thumb}
           <span class="dash-option-name">${isLeader ? '👑 ' : ''}${escapeHtml(o.name)}</span>
           <span class="dash-option-pct">${o.votes} · ${o.percent}%</span>
         </div>

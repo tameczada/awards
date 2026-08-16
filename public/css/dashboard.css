@@ -316,13 +316,23 @@
 .dash-option-top {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 0.8rem;
+  align-items: center;
+  gap: 0.6rem;
   margin-bottom: 0.35rem;
   font-size: 0.88rem;
 }
+.dash-option-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--void-2) center/cover no-repeat;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
 .dash-option.leader .dash-option-name { color: var(--gold-soft); }
 .dash-option-name {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
