@@ -52,19 +52,48 @@
       const Ctx = window.AudioContext || window.webkitAudioContext;
       const ctx = new Ctx();
       const now = ctx.currentTime;
-      const notes = [261.63, 329.63, 392.0, 523.25]; // dó·mi·sol·dó — arpejo simples de abertura
+      const master = ctx.createGain();
+      master.gain.value = 0.85;
+      master.connect(ctx.destination);
+
+      // "sopro" de tecido abrindo: ruído filtrado com o tom caindo,
+      // sincronizado com o começo do movimento da cortina
+      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1.6, ctx.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.Q.value = 0.6;
+      noiseFilter.frequency.setValueAtTime(1600, now);
+      noiseFilter.frequency.exponentialRampToValueAtTime(200, now + 1.5);
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0, now);
+      noiseGain.gain.linearRampToValueAtTime(0.1, now + 0.2);
+      noiseGain.gain.linearRampToValueAtTime(0, now + 1.6);
+      noise.connect(noiseFilter).connect(noiseGain).connect(master);
+      noise.start(now);
+      noise.stop(now + 1.6);
+
+      // sininho suave (fundamental + oitava mais baixa, ondas senoidais) — chega
+      // perto do fim do movimento da cortina, tipo um "revelou!" discreto
+      const notes = [392.0, 493.88, 587.33, 783.99]; // sol·si·ré·sol
       notes.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.value = freq;
-        const start = now + i * 0.12;
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.55);
+        const start = now + 1.0 + i * 0.26;
+        [1, 2].forEach((mult, h) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq * mult;
+          const peak = h === 0 ? 0.15 : 0.045;
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(peak, start + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0008, start + 1.3);
+          osc.connect(gain).connect(master);
+          osc.start(start);
+          osc.stop(start + 1.35);
+        });
       });
     } catch (e) { /* navegador sem suporte a Web Audio — segue sem som */ }
   }
