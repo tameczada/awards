@@ -203,6 +203,7 @@
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
   let lastFocusedId; // pra disparar a transição de entrada só quando a categoria em foco muda
+  let isFirstSnapshot = true; // dispara o suspense das opções também no primeiro carregamento da página
 
   function escapeHtml(str) {
     const p = document.createElement('p');
@@ -327,11 +328,24 @@
     }
   }
 
-  function renderOption(o, index, isFocusedMode, revealed, maxVotes) {
+  // OPT_REVEAL_DELAY_MS: intervalo entre a opção anterior aparecer e a próxima
+  // OPT_REVEAL_FIRST_DELAY_MS: pausa antes da 1ª opção (depois do título do card)
+  const OPT_REVEAL_DELAY_MS = 2000;
+  const OPT_REVEAL_FIRST_DELAY_MS = 350;
+
+  function renderOption(o, index, isFocusedMode, revealed, maxVotes, staggerReveal) {
     const thumb = o.image_url ? `<span class="dash-option-thumb" style="background-image:url('${o.image_url}')"></span>` : '';
+    // suspense: só aplica o delay escalonado quando o card está "entrando" de
+    // verdade (categoria nova em foco / primeiro carregamento) — em refreshes
+    // normais (voto novo chegando, poll periódico) as opções já visíveis não
+    // devem sumir e reaparecer de novo, senão fica piscando toda hora
+    const staggerStyle = staggerReveal
+      ? ` style="animation-delay:${(OPT_REVEAL_FIRST_DELAY_MS + index * OPT_REVEAL_DELAY_MS) / 1000}s"`
+      : '';
+    const staggerClass = staggerReveal ? ' stagger-in' : '';
     if (isFocusedMode && !revealed) {
       return `
-        <div class="dash-option censored">
+        <div class="dash-option censored${staggerClass}"${staggerStyle}>
           <div class="dash-option-top">
             ${thumb}
             <span class="dash-option-name">${escapeHtml(o.name)}</span>
@@ -346,7 +360,7 @@
     const isLeader = index === 0 && o.votes > 0;
     const width = maxVotes ? Math.max((o.votes / maxVotes) * 100, o.votes > 0 ? 4 : 0) : 0;
     return `
-      <div class="dash-option ${isLeader ? 'leader' : ''}">
+      <div class="dash-option ${isLeader ? 'leader' : ''}${staggerClass}"${staggerStyle}>
         <div class="dash-option-top">
           ${thumb}
           <span class="dash-option-name">${isLeader ? '👑 ' : ''}${escapeHtml(o.name)}</span>
@@ -357,7 +371,7 @@
     `;
   }
 
-  function renderCard(cat, isFocusedMode, revealed, justRevealed, entering) {
+  function renderCard(cat, isFocusedMode, revealed, justRevealed, entering, staggerReveal) {
     const hasBg = !!cat.image_url;
     const bgStyle = hasBg ? ` style="background-image:url('${cat.image_url}')"` : '';
     const sizeClass = `size-${cat.card_size === 'pequeno' || cat.card_size === 'grande' ? cat.card_size : 'medio'}`;
@@ -371,7 +385,7 @@
 
     let optionsHtml;
     if (cat.options.length) {
-      optionsHtml = cat.options.map((o, i) => renderOption(o, i, isFocusedMode, revealed, maxVotes)).join('');
+      optionsHtml = cat.options.map((o, i) => renderOption(o, i, isFocusedMode, revealed, maxVotes, staggerReveal)).join('');
     } else {
       optionsHtml = '<p class="dash-empty-options">Nenhuma opção cadastrada ainda.</p>';
     }
@@ -460,6 +474,14 @@
       const focusChanged = data.focused_category_id !== lastFocusedId;
       lastFocusedId = data.focused_category_id;
 
+      // suspense das opções (aparecem uma a uma): dispara quando o card é
+      // "novo" — categoria trocou, mudou de modo (foco ⇄ mostrar todas), ou é
+      // o primeiro carregamento da página. Em refreshes normais (voto novo
+      // chegando, poll de 20s na mesma categoria) NÃO dispara de novo, senão
+      // as opções ficariam sumindo e reaparecendo a cada atualização
+      const staggerReveal = focusChanged || isFirstSnapshot;
+      isFirstSnapshot = false;
+
       els.grid.classList.toggle('focused', isFocusedMode);
 
       const focusedCat = isFocusedMode ? cats.find((c) => c.id === data.focused_category_id) : null;
@@ -468,7 +490,7 @@
       if (!cats.length) {
         els.grid.innerHTML = `<div class="empty-state"><h3>Nenhuma categoria ainda</h3></div>`;
       } else {
-        els.grid.innerHTML = cats.map((c) => renderCard(c, isFocusedMode, data.revealed, justRevealed, isFocusedMode && focusChanged)).join('');
+        els.grid.innerHTML = cats.map((c) => renderCard(c, isFocusedMode, data.revealed, justRevealed, isFocusedMode && focusChanged, staggerReveal)).join('');
         tickCountdowns(); // evita esperar 1s pro primeiro texto do contador aparecer
       }
       els.updatedAt.textContent = `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
