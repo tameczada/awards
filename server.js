@@ -114,6 +114,25 @@ function scheduleDashboardUpdate() {
   }, 700);
 }
 
+// toast em tempo real "Fulano votou em X" — só dispara se a opção estiver
+// ligada no painel admin (dashboard_show_vote_toasts). Envia sempre a opção
+// escolhida, mesmo com a categoria ainda não revelada (comportamento
+// intencional, decidido junto com o Luyan — é pra dar "hype" em tempo real).
+async function maybeBroadcastVoteToast({ categoryName, optionName, voterName }) {
+  try {
+    const { data: settings } = await supabase.from('site_settings').select('dashboard_show_vote_toasts').eq('id', 1).single();
+    if (!settings || !settings.dashboard_show_vote_toasts) return;
+    broadcastDashboard({
+      type: 'vote_toast',
+      voter_name: voterName || 'Alguém',
+      category_name: categoryName,
+      option_name: optionName,
+    });
+  } catch (e) {
+    /* falha ao checar a config não deve derrubar o voto em si */
+  }
+}
+
 // ===== HELPERS =====
 function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
@@ -344,7 +363,7 @@ app.post('/api/vote', voteLimiter, async (req, res) => {
   if (catErr || !cat) return res.status(404).json({ error: 'Categoria não encontrada' });
   if (computeStatus(cat) !== 'aberta') return res.status(403).json({ error: 'Votação não está aberta nesta categoria' });
 
-  const { data: opt } = await supabase.from('options').select('id').eq('id', option_id).eq('category_id', category_id).single();
+  const { data: opt } = await supabase.from('options').select('id, name').eq('id', option_id).eq('category_id', category_id).single();
   if (!opt) return res.status(400).json({ error: 'Opção inválida para esta categoria' });
 
   const ip = getClientIp(req);
@@ -373,6 +392,7 @@ app.post('/api/vote', voteLimiter, async (req, res) => {
   }
 
   scheduleDashboardUpdate();
+  maybeBroadcastVoteToast({ categoryName: cat.name, optionName: opt.name, voterName: cleanName });
   res.json({ success: true });
 });
 
@@ -440,7 +460,7 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const CUSTOM_COLOR_KEYS = ['gold', 'goldSoft', 'crimson', 'crimsonSoft', 'void', 'card', 'cream'];
 
 app.put('/api/admin/settings', authRequired, async (req, res) => {
-  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors, dashboard_bg_from_card, dashboard_show_voters } = req.body;
+  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors, dashboard_bg_from_card, dashboard_show_voters, dashboard_show_vote_toasts } = req.body;
   const update = { updated_at: new Date().toISOString() };
 
   if (site_title !== undefined) update.site_title = site_title;
@@ -448,6 +468,7 @@ app.put('/api/admin/settings', authRequired, async (req, res) => {
 
   if (dashboard_bg_from_card !== undefined) update.dashboard_bg_from_card = !!dashboard_bg_from_card;
   if (dashboard_show_voters !== undefined) update.dashboard_show_voters = !!dashboard_show_voters;
+  if (dashboard_show_vote_toasts !== undefined) update.dashboard_show_vote_toasts = !!dashboard_show_vote_toasts;
 
   if (theme !== undefined) {
     if (!VALID_THEMES.includes(theme)) return res.status(400).json({ error: 'Tema inválido' });
@@ -923,6 +944,7 @@ twitchBot.setVoteHandler(async ({ optionIndex, twitchUserId, displayName }) => {
   }
 
   scheduleDashboardUpdate();
+  maybeBroadcastVoteToast({ categoryName: cat.name, optionName: option.name, voterName: displayName });
   return { message: `voto em "${option.name}" registrado! 🎉` };
 });
 

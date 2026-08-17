@@ -191,6 +191,9 @@
 
       // popup "quem votou em quê" no dashboard
       $('dashboard-voters-toggle').checked = !!s.dashboard_show_voters;
+
+      // toast em tempo real a cada voto
+      $('dashboard-vote-toasts-toggle').checked = !!s.dashboard_show_vote_toasts;
     } catch (err) {
       showToast(err.message, true);
     }
@@ -210,6 +213,16 @@
     try {
       await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_show_voters: e.target.checked }) });
       showToast(e.target.checked ? 'Popup "quem votou" ativado no dashboard!' : 'Popup "quem votou" desativado.');
+    } catch (err) {
+      e.target.checked = !e.target.checked;
+      showToast(err.message, true);
+    }
+  });
+
+  $('dashboard-vote-toasts-toggle').addEventListener('change', async (e) => {
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_show_vote_toasts: e.target.checked }) });
+      showToast(e.target.checked ? 'Toast em tempo real ativado!' : 'Toast em tempo real desativado.');
     } catch (err) {
       e.target.checked = !e.target.checked;
       showToast(err.message, true);

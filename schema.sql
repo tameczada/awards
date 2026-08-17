@@ -50,6 +50,10 @@ alter table site_settings add column if not exists dashboard_bg_from_card boolea
 -- em cada opção — desligado por padrão, pra não expor nomes sem querer
 alter table site_settings add column if not exists dashboard_show_voters boolean not null default false;
 
+-- liga/desliga (via painel admin) o toast em tempo real "Fulano votou em X"
+-- toda vez que um voto chega — desligado por padrão
+alter table site_settings add column if not exists dashboard_show_vote_toasts boolean not null default false;
+
 -- =====================================================
 -- TABELA: dashboard_config
 -- Guarda o token de acesso do dashboard ao vivo (link do

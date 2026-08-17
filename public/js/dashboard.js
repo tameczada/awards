@@ -44,6 +44,7 @@
     votersModalBody: document.getElementById('voters-modal-body'),
     votersCloseBtn: document.getElementById('voters-close-btn'),
     votersModalOverlay: document.querySelector('.voters-modal-overlay'),
+    voteToastContainer: document.getElementById('vote-toast-container'),
   };
 
   if (!token) {
@@ -477,6 +478,33 @@
     }
   }
 
+  // ===== toast em tempo real "Fulano votou em X" =====
+  const MAX_TOASTS = 4; // evita empilhar demais se vários votos chegarem juntos
+  const TOAST_DURATION_MS = 5000;
+
+  function showVoteToast({ voter_name, category_name, option_name }) {
+    const el = document.createElement('div');
+    el.className = 'vote-toast';
+    el.innerHTML = `
+      <span class="vote-toast-icon">🗳️</span>
+      <span class="vote-toast-text">
+        <strong>${escapeHtml(voter_name || 'Alguém')}</strong> votou em <strong>${escapeHtml(option_name || '')}</strong>
+        ${category_name ? `<span class="vote-toast-option">${escapeHtml(category_name)}</span>` : ''}
+      </span>
+    `;
+    els.voteToastContainer.appendChild(el);
+
+    // limita quantos toasts ficam empilhados ao mesmo tempo
+    while (els.voteToastContainer.children.length > MAX_TOASTS) {
+      els.voteToastContainer.removeChild(els.voteToastContainer.firstChild);
+    }
+
+    setTimeout(() => {
+      el.classList.add('leaving');
+      setTimeout(() => el.remove(), 400);
+    }, TOAST_DURATION_MS);
+  }
+
   // ===== WEBSOCKET COM RECONEXÃO AUTOMÁTICA =====
   let ws = null;
   let reconnectDelay = 1000;
@@ -496,6 +524,7 @@
       try {
         const msg = JSON.parse(event.data);
         if (msg.type === 'update') fetchSnapshot();
+        else if (msg.type === 'vote_toast') showVoteToast(msg);
       } catch (e) { /* ignora mensagens malformadas */ }
     });
 
