@@ -36,6 +36,12 @@
     bgBlur: document.getElementById('dash-bg-blur'),
     curtainOverlay: document.getElementById('curtain-overlay'),
     curtainBtn: document.getElementById('curtain-btn'),
+    curtainSound: document.getElementById('curtain-sound'),
+    cartinhaBtn: document.getElementById('cartinha-btn'),
+    cartinhaModal: document.getElementById('cartinha-modal'),
+    cartinhaImage: document.getElementById('cartinha-image'),
+    cartinhaCloseBtn: document.getElementById('cartinha-close-btn'),
+    cartinhaModalOverlay: document.querySelector('.cartinha-modal-overlay'),
   };
 
   if (!token) {
@@ -47,7 +53,30 @@
 
   // ===== cortina de abertura =====
   els.curtainOverlay.style.display = 'flex';
+
   function playCurtainFanfare() {
+    // ===== TENTAR TOCAR MP3 PRIMEIRO =====
+    // readyState >= 2 significa que o navegador já carregou dados suficientes
+    // do arquivo pra tocar; se o MP3 não existir (404) ou não carregar, cai no catch
+    if (els.curtainSound && els.curtainSound.src) {
+      els.curtainSound.currentTime = 0; // reinicia do começo
+      const playPromise = els.curtainSound.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => { /* MP3 tocando normalmente */ })
+          .catch(() => {
+            // fallback para som sintetizado se o MP3 falhar (ex: arquivo não existe)
+            playCurtainFanfareSynthetic();
+          });
+        return; // saiu aqui, não toca som sintetizado
+      }
+    }
+
+    // ===== FALLBACK: SOM SINTETIZADO =====
+    playCurtainFanfareSynthetic();
+  }
+
+  function playCurtainFanfareSynthetic() {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       const ctx = new Ctx();
@@ -106,6 +135,22 @@
     // visualmente mas fica travando clique em tudo por baixo pra sempre
     setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 4000);
   });
+
+  // ===== cartinha do luyan =====
+  function openCartinhaModal() {
+    // ajuste o caminho da imagem conforme necessário
+    // padrão: /cartinha.png, /img/cartinha.png, etc.
+    els.cartinhaImage.src = '/cartinha.png';
+    els.cartinhaModal.style.display = 'flex';
+  }
+
+  function closeCartinhaModal() {
+    els.cartinhaModal.style.display = 'none';
+  }
+
+  els.cartinhaBtn.addEventListener('click', openCartinhaModal);
+  els.cartinhaCloseBtn.addEventListener('click', closeCartinhaModal);
+  els.cartinhaModalOverlay.addEventListener('click', closeCartinhaModal);
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
