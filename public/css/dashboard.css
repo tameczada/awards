@@ -824,7 +824,7 @@
    usa animation-delay (calculado no JS) pra entrar 2s depois da anterior */
 .dash-option.stagger-in {
   opacity: 0;
-  animation: option-stagger-in 0.45s ease both;
+  animation: option-stagger-in 2s ease both;
 }
 @keyframes option-stagger-in {
   0% { opacity: 0; transform: translateY(14px); }
