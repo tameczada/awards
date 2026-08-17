@@ -3,6 +3,7 @@
   const token = params.get('token');
 
   let dashboardBgFromCard = false;
+  let dashboardShowVoters = false;
 
   // aplica o mesmo tema/cores/fonte definidos no admin (Configurações → Aparência)
   // — /api/settings é público, não depende do token do dashboard
@@ -13,6 +14,7 @@
       if (window.applyVotacaoTheme) window.applyVotacaoTheme(s.theme, s.custom_colors);
       if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
       dashboardBgFromCard = !!s.dashboard_bg_from_card;
+      dashboardShowVoters = !!s.dashboard_show_voters;
     } catch (e) { /* segue com o tema padrão */ }
   }
   loadSettings();
@@ -37,11 +39,11 @@
     curtainOverlay: document.getElementById('curtain-overlay'),
     curtainBtn: document.getElementById('curtain-btn'),
     curtainSound: document.getElementById('curtain-sound'),
-    cartinhaBtn: document.getElementById('cartinha-btn'),
-    cartinhaModal: document.getElementById('cartinha-modal'),
-    cartinhaImage: document.getElementById('cartinha-image'),
-    cartinhaCloseBtn: document.getElementById('cartinha-close-btn'),
-    cartinhaModalOverlay: document.querySelector('.cartinha-modal-overlay'),
+    votersModal: document.getElementById('voters-modal'),
+    votersModalTitle: document.getElementById('voters-modal-title'),
+    votersModalBody: document.getElementById('voters-modal-body'),
+    votersCloseBtn: document.getElementById('voters-close-btn'),
+    votersModalOverlay: document.querySelector('.voters-modal-overlay'),
   };
 
   if (!token) {
@@ -136,21 +138,66 @@
     setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 4000);
   });
 
-  // ===== cartinha do luyan =====
-  function openCartinhaModal() {
-    // ajuste o caminho da imagem conforme necessário
-    // padrão: /cartinha.png, /img/cartinha.png, etc.
-    els.cartinhaImage.src = '/cartinha.png';
-    els.cartinhaModal.style.display = 'flex';
+  // ===== popup "quem votou em quê" =====
+  function closeVotersModal() {
+    els.votersModal.style.display = 'none';
+  }
+  els.votersCloseBtn.addEventListener('click', closeVotersModal);
+  els.votersModalOverlay.addEventListener('click', closeVotersModal);
+
+  async function openVotersModal(categoryId, categoryName) {
+    els.votersModalTitle.textContent = categoryName ? `Quem votou · ${categoryName}` : 'Quem votou em quê';
+    els.votersModalBody.innerHTML = '<div class="loading-state"><div class="spinner"></div>Carregando…</div>';
+    els.votersModal.style.display = 'flex';
+
+    try {
+      const res = await fetch(`/api/dashboard/voters/${categoryId}?token=${encodeURIComponent(token)}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) {
+        els.votersModalBody.innerHTML = `<p class="voters-modal-error">${escapeHtml(data.error || 'Não foi possível carregar.')}</p>`;
+        return;
+      }
+      renderVotersModal(data);
+    } catch (e) {
+      els.votersModalBody.innerHTML = '<p class="voters-modal-error">Erro de rede ao carregar. Tente novamente.</p>';
+    }
   }
 
-  function closeCartinhaModal() {
-    els.cartinhaModal.style.display = 'none';
+  function renderVotersModal(data) {
+    const options = data.options || [];
+    if (!options.length) {
+      els.votersModalBody.innerHTML = '<p class="voters-empty-note">Essa categoria ainda não tem opções.</p>';
+      return;
+    }
+    els.votersModalBody.innerHTML = options.map((o) => {
+      const namesHtml = o.voters.length
+        ? `<div class="voters-name-list">${o.voters.map((n) => `<span class="voters-name-chip">${escapeHtml(n)}</span>`).join('')}</div>`
+        : '';
+      const anonHtml = o.anonymous_count > 0
+        ? `<p class="voters-anonymous-note">+ ${o.anonymous_count} voto${o.anonymous_count === 1 ? '' : 's'} anônimo${o.anonymous_count === 1 ? '' : 's'} (pelo site, sem nome)</p>`
+        : '';
+      const emptyHtml = (!o.voters.length && !o.anonymous_count)
+        ? '<p class="voters-empty-note">Ninguém votou aqui ainda.</p>'
+        : '';
+      return `
+        <div class="voters-option-block">
+          <div class="voters-option-head">
+            <h3>${escapeHtml(o.name)}</h3>
+            <span class="voters-option-count">${o.votes} voto${o.votes === 1 ? '' : 's'}</span>
+          </div>
+          ${namesHtml}${anonHtml}${emptyHtml}
+        </div>
+      `;
+    }).join('');
   }
 
-  els.cartinhaBtn.addEventListener('click', openCartinhaModal);
-  els.cartinhaCloseBtn.addEventListener('click', closeCartinhaModal);
-  els.cartinhaModalOverlay.addEventListener('click', closeCartinhaModal);
+  // delegação de evento: os cards são recriados a cada refresh do grid,
+  // então o listener fica no container fixo, não em cada botão individual
+  els.grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.dash-voters-btn');
+    if (!btn) return;
+    openVotersModal(btn.dataset.categoryId, btn.dataset.categoryName);
+  });
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
@@ -332,6 +379,13 @@
       ? `${cat.total_votes} voto${cat.total_votes === 1 ? '' : 's'} até agora`
       : `${STATUS_LABEL[cat.status] || cat.status} · ${cat.total_votes} voto${cat.total_votes === 1 ? '' : 's'}`;
 
+    // botão "ver quem votou": só aparece se o admin ligou a opção E os
+    // resultados dessa categoria não estão censurados no momento (senão o
+    // popup também precisaria censurar, e fica mais simples só escondê-lo)
+    const votersBtnHtml = (dashboardShowVoters && !censored)
+      ? `<button type="button" class="dash-voters-btn" data-category-id="${cat.id}" data-category-name="${escapeHtml(cat.name)}">👥 Ver quem votou</button>`
+      : '';
+
     return `
       <article class="dash-card ${sizeClass} ${hasBg ? 'has-bg' : ''} ${justRevealed ? 'revealing' : ''} ${entering ? 'entering' : ''}"${bgStyle}>
         <div class="dash-card-head">
@@ -342,6 +396,7 @@
           ${countdownHtml}
         </div>
         <div class="dash-options">${optionsHtml}</div>
+        ${votersBtnHtml}
       </article>
     `;
   }
