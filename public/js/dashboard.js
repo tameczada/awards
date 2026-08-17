@@ -136,7 +136,7 @@
     // de tirar a cortina de vez — via inline style, não só classe, senão o estilo
     // inline que a mostrou (style.display='flex') continua vencendo e ela some
     // visualmente mas fica travando clique em tudo por baixo pra sempre
-    setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 4000);
+    setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 9000);
   });
 
   // ===== popup "quem votou em quê" =====
