@@ -85,6 +85,140 @@
   .curtain-btn { animation: none; }
 }
 
+/* ===== BOTÕES DA CORTINA (grupo) ===== */
+.curtain-buttons-group {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ===== BOTÃO CARTINHA DO LUYAN ===== */
+.cartinha-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(10, 8, 6, 0.55);
+  border: 1px solid rgba(203, 161, 53, 0.6);
+  color: rgba(203, 161, 53, 0.9);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 1rem 1.6rem;
+  border-radius: 100px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 0.2s ease, opacity 0.35s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.cartinha-btn:hover {
+  transform: scale(1.05);
+  border-color: var(--gold);
+  color: var(--gold-soft);
+}
+.cartinha-btn:active { transform: scale(0.95); }
+.cartinha-btn-icon { font-size: 1.4rem; }
+.curtain-overlay.open .cartinha-btn { opacity: 0; pointer-events: none; }
+
+/* ===== MODAL DA CARTINHA ===== */
+.cartinha-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: modal-fade-in 0.3s ease;
+}
+
+@keyframes modal-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.cartinha-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+
+.cartinha-modal-content {
+  position: relative;
+  z-index: 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: modal-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes modal-slide-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+#cartinha-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+}
+
+.cartinha-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  background: rgba(10, 8, 6, 0.8);
+  border: 1px solid var(--line);
+  color: var(--gold-soft);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+.cartinha-close-btn:hover {
+  background: rgba(10, 8, 6, 0.95);
+  border-color: var(--gold);
+}
+.cartinha-close-btn:active { transform: scale(0.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cartinha-modal { animation: none; }
+  .cartinha-modal-content { animation: none; }
+}
+
 /* ===== TARJINHA "A SEGUIR" (rodapé) ===== */
 .dash-next-bar {
   position: fixed;

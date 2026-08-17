@@ -17,10 +17,28 @@
 <div id="curtain-overlay" class="curtain-overlay" style="display:none">
   <div class="curtain-panel curtain-left"></div>
   <div class="curtain-panel curtain-right"></div>
-  <button type="button" id="curtain-btn" class="curtain-btn">
-    <span class="curtain-btn-icon">▶</span>
-    <span>Vamos as Categorias Leo&isa live infinita!</span>
-  </button>
+  <audio id="curtain-sound" preload="auto" style="display:none">
+    <source src="/curtain-sound.mp3" type="audio/mpeg">
+  </audio>
+  <div class="curtain-buttons-group">
+    <button type="button" id="curtain-btn" class="curtain-btn">
+      <span class="curtain-btn-icon">▶</span>
+      <span>Vamos as Categorias Leo&isa live infinita!</span>
+    </button>
+    <button type="button" id="cartinha-btn" class="cartinha-btn" title="Cartinha do Luyan">
+      <span class="cartinha-btn-icon">💌</span>
+      <span>Cartinha do luyan</span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal da Cartinha -->
+<div id="cartinha-modal" class="cartinha-modal" style="display:none">
+  <div class="cartinha-modal-overlay"></div>
+  <div class="cartinha-modal-content">
+    <button type="button" id="cartinha-close-btn" class="cartinha-close-btn" title="Fechar">✕</button>
+    <img id="cartinha-image" src="" alt="Cartinha do Luyan" />
+  </div>
 </div>
 
 <div id="token-gate" class="token-gate">

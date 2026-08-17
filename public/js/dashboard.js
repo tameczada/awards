@@ -36,6 +36,12 @@
     bgBlur: document.getElementById('dash-bg-blur'),
     curtainOverlay: document.getElementById('curtain-overlay'),
     curtainBtn: document.getElementById('curtain-btn'),
+    curtainSound: document.getElementById('curtain-sound'),
+    cartinhaBtn: document.getElementById('cartinha-btn'),
+    cartinhaModal: document.getElementById('cartinha-modal'),
+    cartinhaImage: document.getElementById('cartinha-image'),
+    cartinhaCloseBtn: document.getElementById('cartinha-close-btn'),
+    cartinhaModalOverlay: document.querySelector('.cartinha-modal-overlay'),
   };
 
   if (!token) {
@@ -47,7 +53,30 @@
 
   // ===== cortina de abertura =====
   els.curtainOverlay.style.display = 'flex';
+
   function playCurtainFanfare() {
+    // ===== TENTAR TOCAR MP3 PRIMEIRO =====
+    if (els.curtainSound && els.curtainSound.src) {
+      try {
+        els.curtainSound.currentTime = 0; // reinicia do começo
+        const playPromise = els.curtainSound.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // fallback para som sintetizado se o MP3 falhar
+            playCurtainFanfareSynthetic();
+          });
+          return; // saiu aqui, não toca som sintetizado
+        }
+      } catch (e) {
+        // se houver erro, tenta o som sintetizado
+      }
+    }
+
+    // ===== FALLBACK: SOM SINTETIZADO =====
+    playCurtainFanfareSynthetic();
+  }
+
+  function playCurtainFanfareSynthetic() {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       const ctx = new Ctx();
@@ -78,7 +107,7 @@
 
       // sininho suave (fundamental + oitava mais baixa, ondas senoidais) — chega
       // perto do fim do movimento da cortina, tipo um "revelou!" discreto
-      const notes = [/*392.0, 493.88, 587.33, 783.99*/]; // sol·si·ré·sol
+      const notes = [392.0, 493.88, 587.33, 783.99]; // sol·si·ré·sol
       notes.forEach((freq, i) => {
         const start = now + 1.0 + i * 0.26;
         [1, 2].forEach((mult, h) => {
@@ -95,7 +124,7 @@
           osc.stop(start + 1.35);
         });
       });
-    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som  */}
+    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som */ }
   }
   els.curtainBtn.addEventListener('click', () => {
     playCurtainFanfare();
@@ -106,6 +135,22 @@
     // visualmente mas fica travando clique em tudo por baixo pra sempre
     setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 4000);
   });
+
+  // ===== cartinha do luyan =====
+  function openCartinhaModal() {
+    // ajuste o caminho da imagem conforme necessário
+    // padrão: /cartinha.png, /img/cartinha.png, etc.
+    els.cartinhaImage.src = '/cartinha.png';
+    els.cartinhaModal.style.display = 'flex';
+  }
+
+  function closeCartinhaModal() {
+    els.cartinhaModal.style.display = 'none';
+  }
+
+  els.cartinhaBtn.addEventListener('click', openCartinhaModal);
+  els.cartinhaCloseBtn.addEventListener('click', closeCartinhaModal);
+  els.cartinhaModalOverlay.addEventListener('click', closeCartinhaModal);
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
