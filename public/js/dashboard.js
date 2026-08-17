@@ -78,7 +78,7 @@
 
       // sininho suave (fundamental + oitava mais baixa, ondas senoidais) — chega
       // perto do fim do movimento da cortina, tipo um "revelou!" discreto
-      const notes = [392.0, 493.88, 587.33, 783.99]; // sol·si·ré·sol
+      /*const notes = [392.0, 493.88, 587.33, 783.99]; // sol·si·ré·sol
       notes.forEach((freq, i) => {
         const start = now + 1.0 + i * 0.26;
         [1, 2].forEach((mult, h) => {
@@ -95,8 +95,8 @@
           osc.stop(start + 1.35);
         });
       });
-    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som */ }
-  }
+    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som  }
+  }*/
   els.curtainBtn.addEventListener('click', () => {
     playCurtainFanfare();
     els.curtainOverlay.classList.add('open');
