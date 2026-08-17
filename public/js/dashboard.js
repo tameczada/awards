@@ -511,7 +511,7 @@
 
   // ===== toast em tempo real "Fulano votou em X" =====
   const MAX_TOASTS = 4; // evita empilhar demais se vários votos chegarem juntos
-  const TOAST_DURATION_MS = 5000;
+  const TOAST_DURATION_MS = 3000;
 
   function showVoteToast({ voter_name, category_name, option_name }) {
     const el = document.createElement('div');
