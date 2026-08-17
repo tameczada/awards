@@ -95,8 +95,8 @@
           osc.stop(start + 1.35);
         });
       });
-    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som  }
-  }*/
+    } catch (e) { /* navegador sem suporte a Web Audio — segue sem som  */}
+  }
   els.curtainBtn.addEventListener('click', () => {
     playCurtainFanfare();
     els.curtainOverlay.classList.add('open');
