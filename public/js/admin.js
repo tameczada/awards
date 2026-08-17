@@ -188,6 +188,9 @@
 
       // fundo do dashboard = imagem da categoria em foco (desfocada)
       $('dashboard-bg-toggle').checked = !!s.dashboard_bg_from_card;
+
+      // popup "quem votou em quê" no dashboard
+      $('dashboard-voters-toggle').checked = !!s.dashboard_show_voters;
     } catch (err) {
       showToast(err.message, true);
     }
@@ -197,6 +200,16 @@
     try {
       await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_bg_from_card: e.target.checked }) });
       showToast(e.target.checked ? 'Fundo do dashboard agora usa a imagem da categoria!' : 'Fundo do dashboard voltou ao padrão.');
+    } catch (err) {
+      e.target.checked = !e.target.checked;
+      showToast(err.message, true);
+    }
+  });
+
+  $('dashboard-voters-toggle').addEventListener('change', async (e) => {
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_show_voters: e.target.checked }) });
+      showToast(e.target.checked ? 'Popup "quem votou" ativado no dashboard!' : 'Popup "quem votou" desativado.');
     } catch (err) {
       e.target.checked = !e.target.checked;
       showToast(err.message, true);
