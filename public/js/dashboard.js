@@ -56,19 +56,19 @@
 
   function playCurtainFanfare() {
     // ===== TENTAR TOCAR MP3 PRIMEIRO =====
+    // readyState >= 2 significa que o navegador já carregou dados suficientes
+    // do arquivo pra tocar; se o MP3 não existir (404) ou não carregar, cai no catch
     if (els.curtainSound && els.curtainSound.src) {
-      try {
-        els.curtainSound.currentTime = 0; // reinicia do começo
-        const playPromise = els.curtainSound.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {
-            // fallback para som sintetizado se o MP3 falhar
+      els.curtainSound.currentTime = 0; // reinicia do começo
+      const playPromise = els.curtainSound.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => { /* MP3 tocando normalmente */ })
+          .catch(() => {
+            // fallback para som sintetizado se o MP3 falhar (ex: arquivo não existe)
             playCurtainFanfareSynthetic();
           });
-          return; // saiu aqui, não toca som sintetizado
-        }
-      } catch (e) {
-        // se houver erro, tenta o som sintetizado
+        return; // saiu aqui, não toca som sintetizado
       }
     }
 
