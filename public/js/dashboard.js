@@ -36,6 +36,11 @@
     bgBlur: document.getElementById('dash-bg-blur'),
     curtainOverlay: document.getElementById('curtain-overlay'),
     curtainBtn: document.getElementById('curtain-btn'),
+    cartinhaBtn: document.getElementById('cartinha-btn'),
+    cartinhaModal: document.getElementById('cartinha-modal'),
+    cartinhaImage: document.getElementById('cartinha-image'),
+    cartinhaCloseBtn: document.getElementById('cartinha-close-btn'),
+    cartinhaModalOverlay: document.querySelector('.cartinha-modal-overlay'),
   };
 
   if (!token) {
@@ -106,6 +111,22 @@
     // visualmente mas fica travando clique em tudo por baixo pra sempre
     setTimeout(() => { els.curtainOverlay.style.display = 'none'; }, 4000);
   });
+
+  // ===== cartinha do luyan =====
+  function openCartinhaModal() {
+    // ajuste o caminho da imagem conforme necessário
+    // padrão: /cartinha.png, /img/cartinha.png, etc.
+    els.cartinhaImage.src = '/cartinha.png';
+    els.cartinhaModal.style.display = 'flex';
+  }
+
+  function closeCartinhaModal() {
+    els.cartinhaModal.style.display = 'none';
+  }
+
+  els.cartinhaBtn.addEventListener('click', openCartinhaModal);
+  els.cartinhaCloseBtn.addEventListener('click', closeCartinhaModal);
+  els.cartinhaModalOverlay.addEventListener('click', closeCartinhaModal);
 
   const STATUS_LABEL = { aberta: 'Aberta agora', encerrada: 'Encerrada', agendada: 'Em breve', pausada: 'Pausada' };
   let lastRevealed = false; // pra disparar a animação só na transição censurado -> revelado
