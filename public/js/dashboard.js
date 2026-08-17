@@ -517,7 +517,7 @@
     const el = document.createElement('div');
     el.className = 'vote-toast';
     el.innerHTML = `
-      <span class="vote-toast-icon">🗳️</span>
+      <span class="vote-toast-icon"></span>
       <span class="vote-toast-text">
         <strong>${escapeHtml(voter_name || 'Alguém')}</strong> votou em <strong>${escapeHtml(option_name || '')}</strong>
         ${category_name ? `<span class="vote-toast-option">${escapeHtml(category_name)}</span>` : ''}
