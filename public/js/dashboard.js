@@ -452,14 +452,23 @@
     }
   }
 
+  // evita que duas chamadas de fetchSnapshot() em paralelo (ex: a inicial +
+  // a que dispara assim que o WebSocket conecta, que acontecem quase juntas)
+  // se atropelem — só a resposta da chamada MAIS RECENTE tem permissão de
+  // renderizar; isso é o que fazia o suspense parecer "não funcionar": a 2ª
+  // chamada terminava logo depois da 1ª e sobrescrevia o HTML sem o efeito
+  let fetchSeq = 0;
   async function fetchSnapshot() {
+    const seq = ++fetchSeq;
     try {
       const res = await fetch(`/api/dashboard/live?token=${encodeURIComponent(token)}`, { cache: 'no-store' });
+      if (seq !== fetchSeq) return; // já saiu uma chamada mais nova, descarta esta
       if (res.status === 401) {
         els.grid.innerHTML = `<div class="empty-state"><h3>Token inválido</h3><p>Gere um novo link no painel admin.</p></div>`;
         return;
       }
       const data = await res.json();
+      if (seq !== fetchSeq) return; // idem, checa de novo depois do 2º await
       if (!res.ok) {
         console.error('Falha ao carregar dashboard:', data.error);
         els.grid.innerHTML = `<div class="empty-state"><h3>Erro ao carregar categorias</h3><p>${escapeHtml(data.error || 'Tente recarregar a página.')}</p></div>`;
