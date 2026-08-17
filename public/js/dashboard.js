@@ -330,8 +330,8 @@
 
   // OPT_REVEAL_DELAY_MS: intervalo entre a opção anterior aparecer e a próxima
   // OPT_REVEAL_FIRST_DELAY_MS: pausa antes da 1ª opção (depois do título do card)
-  const OPT_REVEAL_DELAY_MS = 2000;
-  const OPT_REVEAL_FIRST_DELAY_MS = 350;
+  const OPT_REVEAL_DELAY_MS = 3000;
+  const OPT_REVEAL_FIRST_DELAY_MS = 5000;
 
   function renderOption(o, index, isFocusedMode, revealed, maxVotes, staggerReveal) {
     const thumb = o.image_url ? `<span class="dash-option-thumb" style="background-image:url('${o.image_url}')"></span>` : '';
