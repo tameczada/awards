@@ -37,12 +37,7 @@
     curtainOverlay: document.getElementById('curtain-overlay'),
     curtainBtn: document.getElementById('curtain-btn'),
     curtainSound: document.getElementById('curtain-sound'),
-    cartinhaBtn: document.getElementById('cartinha-btn'),
-    cartinhaModal: document.getElementById('cartinha-modal'),
-    cartinhaImage: document.getElementById('cartinha-image'),
-    cartinhaCloseBtn: document.getElementById('cartinha-close-btn'),
-    cartinhaModalOverlay: document.querySelector('.cartinha-modal-overlay'),
-  };
+    };
 
   if (!token) {
     els.gate.style.display = 'flex';
