@@ -46,10 +46,6 @@ alter table site_settings add column if not exists custom_colors jsonb;
 alter table site_settings add column if not exists font_pair text default 'classic';
 alter table site_settings add column if not exists dashboard_bg_from_card boolean not null default false;
 
--- liga/desliga (via painel admin) o popup no dashboard que mostra quem votou
--- em cada opção — desligado por padrão, pra não expor nomes sem querer
-alter table site_settings add column if not exists dashboard_show_voters boolean not null default false;
-
 -- =====================================================
 -- TABELA: dashboard_config
 -- Guarda o token de acesso do dashboard ao vivo (link do
@@ -121,14 +117,9 @@ create table if not exists votes (
   option_id uuid not null references options(id) on delete cascade,
   voter_hash text not null,
   voter_ip text,
-  voter_name text,
   created_at timestamptz default now(),
   unique (category_id, voter_hash)
 );
-
--- migração pra bancos que rodaram o schema antes desta coluna existir
--- guarda o nome (display name da Twitch, quando o voto veio do chat) de quem votou
-alter table votes add column if not exists voter_name text;
 
 -- =====================================================
 -- TABELA: twitch_config
