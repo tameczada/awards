@@ -335,7 +335,7 @@ app.get('/api/categories/:id', async (req, res) => {
 });
 
 app.post('/api/vote', voteLimiter, async (req, res) => {
-  const { category_id, option_id, voter_id } = req.body;
+  const { category_id, option_id, voter_id, voter_name } = req.body;
   if (!category_id || !option_id || !voter_id) {
     return res.status(400).json({ error: 'Dados incompletos' });
   }
@@ -353,11 +353,16 @@ app.post('/api/vote', voteLimiter, async (req, res) => {
     .update(`${voter_id}:${category_id}:${process.env.JWT_SECRET}`)
     .digest('hex');
 
+  // nome é opcional (a página de votação atual não pede nome) — quando
+  // enviado, fica salvo pra aparecer no popup "quem votou em quê" do dashboard
+  const cleanName = typeof voter_name === 'string' ? voter_name.trim().slice(0, 60) : null;
+
   const { error: insertErr } = await supabase.from('votes').insert({
     category_id,
     option_id,
     voter_hash: voterHash,
     voter_ip: ip,
+    voter_name: cleanName || null,
   });
 
   if (insertErr) {
@@ -435,13 +440,14 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const CUSTOM_COLOR_KEYS = ['gold', 'goldSoft', 'crimson', 'crimsonSoft', 'void', 'card', 'cream'];
 
 app.put('/api/admin/settings', authRequired, async (req, res) => {
-  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors, dashboard_bg_from_card } = req.body;
+  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors, dashboard_bg_from_card, dashboard_show_voters } = req.body;
   const update = { updated_at: new Date().toISOString() };
 
   if (site_title !== undefined) update.site_title = site_title;
   if (site_subtitle !== undefined) update.site_subtitle = site_subtitle;
 
   if (dashboard_bg_from_card !== undefined) update.dashboard_bg_from_card = !!dashboard_bg_from_card;
+  if (dashboard_show_voters !== undefined) update.dashboard_show_voters = !!dashboard_show_voters;
 
   if (theme !== undefined) {
     if (!VALID_THEMES.includes(theme)) return res.status(400).json({ error: 'Tema inválido' });
@@ -743,6 +749,53 @@ app.post('/api/dashboard/hide', dashboardTokenRequired, async (req, res) => {
   res.json({ success: true });
 });
 
+// lista quem votou em cada opção de uma categoria — só funciona se o admin
+// ligou "mostrar quem votou" nas configurações, e só libera os nomes depois
+// que a categoria foi revelada (se ela for a categoria em foco no momento;
+// no modo "mostrar todas" não existe censura, então libera direto)
+app.get('/api/dashboard/voters/:categoryId', dashboardTokenRequired, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const { categoryId } = req.params;
+
+  const { data: settings } = await supabase.from('site_settings').select('dashboard_show_voters').eq('id', 1).single();
+  if (!settings || !settings.dashboard_show_voters) {
+    return res.status(403).json({ error: 'Esse recurso está desativado no painel admin.' });
+  }
+
+  const { data: cfg } = await supabase.from('dashboard_config').select('focused_category_id, revealed').eq('id', 1).single();
+  const isFocusedHere = cfg && cfg.focused_category_id === categoryId;
+  if (isFocusedHere && !cfg.revealed) {
+    return res.status(403).json({ error: 'Os resultados dessa categoria ainda não foram revelados.' });
+  }
+
+  const { data: cat, error: catErr } = await supabase.from('categories').select('id, name').eq('id', categoryId).single();
+  if (catErr || !cat) return res.status(404).json({ error: 'Categoria não encontrada' });
+
+  const [optsRes, votesRes] = await Promise.all([
+    supabase.from('options').select('id, name').eq('category_id', categoryId).order('display_order', { ascending: true }),
+    supabase.from('votes').select('option_id, voter_name').eq('category_id', categoryId),
+  ]);
+  if (optsRes.error) return res.status(500).json({ error: optsRes.error.message });
+  if (votesRes.error) return res.status(500).json({ error: votesRes.error.message });
+
+  const votersByOption = {};
+  (votesRes.data || []).forEach((v) => {
+    if (!votersByOption[v.option_id]) votersByOption[v.option_id] = [];
+    votersByOption[v.option_id].push(v.voter_name || null);
+  });
+
+  const options = (optsRes.data || [])
+    .map((o) => {
+      const voters = votersByOption[o.id] || [];
+      const named = voters.filter((n) => n).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      const anonymousCount = voters.length - named.length;
+      return { id: o.id, name: o.name, votes: voters.length, voters: named, anonymous_count: anonymousCount };
+    })
+    .sort((a, b) => b.votes - a.votes);
+
+  res.json({ category: { id: cat.id, name: cat.name }, options });
+});
+
 app.get('/api/admin/dashboard-token', authRequired, async (req, res) => {
   const { data, error } = await supabase.from('dashboard_config').select('token').eq('id', 1).single();
   if (error) return res.status(500).json({ error: error.message });
@@ -861,6 +914,7 @@ twitchBot.setVoteHandler(async ({ optionIndex, twitchUserId, displayName }) => {
     option_id: option.id,
     voter_hash: voterHash,
     voter_ip: 'twitch-chat',
+    voter_name: displayName || null,
   });
 
   if (insertErr) {

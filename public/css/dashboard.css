@@ -219,6 +219,138 @@
   .cartinha-modal-content { animation: none; }
 }
 
+/* ===== BOTÃO "VER QUEM VOTOU" (por card) ===== */
+.dash-voters-btn {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin-top: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(203, 161, 53, 0.1);
+  border: 1px solid rgba(203, 161, 53, 0.35);
+  color: var(--gold-soft);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.dash-voters-btn:hover { background: rgba(203, 161, 53, 0.18); border-color: var(--gold); }
+.dash-voters-btn:active { transform: scale(0.96); }
+
+/* ===== MODAL "QUEM VOTOU EM QUÊ" ===== */
+.voters-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: modal-fade-in 0.3s ease;
+}
+
+.voters-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+
+.voters-modal-content {
+  position: relative;
+  z-index: 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  width: min(560px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 2rem 2.2rem 2.2rem;
+  animation: modal-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#voters-modal-title {
+  font-family: var(--font-display);
+  font-style: var(--font-display-style, italic);
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin: 0 0 1.2rem;
+  padding-right: 2rem;
+}
+
+.voters-option-block {
+  margin-bottom: 1.4rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--line);
+}
+.voters-option-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.voters-option-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.voters-option-head h3 {
+  font-family: var(--font-display);
+  font-style: var(--font-display-style, italic);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.voters-option-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.voters-name-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.voters-name-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  color: var(--cream-dim);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 100px;
+}
+.voters-anonymous-note {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+.voters-empty-note {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.voters-modal-error {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #e6a99b;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voters-modal { animation: none; }
+  .voters-modal-content { animation: none; }
+}
+
 /* ===== TARJINHA "A SEGUIR" (rodapé) ===== */
 .dash-next-bar {
   position: fixed;
