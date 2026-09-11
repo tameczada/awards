@@ -54,6 +54,11 @@ alter table site_settings add column if not exists dashboard_show_voters boolean
 -- toda vez que um voto chega — desligado por padrão
 alter table site_settings add column if not exists dashboard_show_vote_toasts boolean not null default false;
 
+-- cortina de abertura do dashboard e a música/fanfarra que toca junto —
+-- default true pra manter o comportamento atual em quem já tinha o site rodando
+alter table site_settings add column if not exists dashboard_curtain_enabled boolean not null default true;
+alter table site_settings add column if not exists dashboard_curtain_sound_enabled boolean not null default true;
+
 -- =====================================================
 -- TABELA: dashboard_config
 -- Guarda o token de acesso do dashboard ao vivo (link do

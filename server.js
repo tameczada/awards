@@ -461,7 +461,7 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const CUSTOM_COLOR_KEYS = ['gold', 'goldSoft', 'crimson', 'crimsonSoft', 'void', 'card', 'cream'];
 
 app.put('/api/admin/settings', authRequired, async (req, res) => {
-  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors, dashboard_bg_from_card, dashboard_show_voters, dashboard_show_vote_toasts } = req.body;
+  const { site_title, site_subtitle, theme, font_pair, background_mode, background_color, custom_colors, dashboard_bg_from_card, dashboard_show_voters, dashboard_show_vote_toasts, dashboard_curtain_enabled, dashboard_curtain_sound_enabled } = req.body;
   const update = { updated_at: new Date().toISOString() };
 
   if (site_title !== undefined) update.site_title = site_title;
@@ -470,6 +470,8 @@ app.put('/api/admin/settings', authRequired, async (req, res) => {
   if (dashboard_bg_from_card !== undefined) update.dashboard_bg_from_card = !!dashboard_bg_from_card;
   if (dashboard_show_voters !== undefined) update.dashboard_show_voters = !!dashboard_show_voters;
   if (dashboard_show_vote_toasts !== undefined) update.dashboard_show_vote_toasts = !!dashboard_show_vote_toasts;
+  if (dashboard_curtain_enabled !== undefined) update.dashboard_curtain_enabled = !!dashboard_curtain_enabled;
+  if (dashboard_curtain_sound_enabled !== undefined) update.dashboard_curtain_sound_enabled = !!dashboard_curtain_sound_enabled;
 
   if (theme !== undefined) {
     if (!VALID_THEMES.includes(theme)) return res.status(400).json({ error: 'Tema inválido' });

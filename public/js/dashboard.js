@@ -4,6 +4,7 @@
 
   let dashboardBgFromCard = false;
   let dashboardShowVoters = false;
+  let curtainSoundEnabled = true; // default true: preserva o comportamento atual até a config carregar
 
   // aplica o mesmo tema/cores/fonte definidos no admin (Configurações → Aparência)
   // — /api/settings é público, não depende do token do dashboard
@@ -15,8 +16,18 @@
       if (window.applyVotacaoFont) window.applyVotacaoFont(s.font_pair);
       dashboardBgFromCard = !!s.dashboard_bg_from_card;
       dashboardShowVoters = !!s.dashboard_show_voters;
+      curtainSoundEnabled = s.dashboard_curtain_sound_enabled !== false;
+      // a cortina em si (mostrar ou pular direto pros cards) só é decidida uma
+      // vez, no carregamento inicial da página — ligar/desligar no meio de uma
+      // sessão já aberta no OBS não deve fazer a cortina aparecer/sumir sozinha
+      if (!curtainVisibilityDecided) {
+        curtainVisibilityDecided = true;
+        const curtainEnabled = s.dashboard_curtain_enabled !== false;
+        if (!curtainEnabled && els.curtainOverlay) els.curtainOverlay.style.display = 'none';
+      }
     } catch (e) { /* segue com o tema padrão */ }
   }
+  let curtainVisibilityDecided = false;
   loadSettings();
   setInterval(loadSettings, 20000); // pega a tempo se o admin ligar/desligar a opção
 
@@ -130,7 +141,7 @@
     } catch (e) { /* navegador sem suporte a Web Audio — segue sem som */ }
   }
   els.curtainBtn.addEventListener('click', () => {
-    playCurtainFanfare();
+    if (curtainSoundEnabled) playCurtainFanfare();
     els.curtainOverlay.classList.add('open');
     // espera a transição terminar (3.6s + atraso de 0.2s do painel direito) antes
     // de tirar a cortina de vez — via inline style, não só classe, senão o estilo

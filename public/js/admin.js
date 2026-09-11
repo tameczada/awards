@@ -195,6 +195,10 @@
 
       // toast em tempo real a cada voto
       $('dashboard-vote-toasts-toggle').checked = !!s.dashboard_show_vote_toasts;
+
+      // cortina de abertura e música da cortina
+      $('dashboard-curtain-toggle').checked = s.dashboard_curtain_enabled !== false;
+      $('dashboard-curtain-sound-toggle').checked = s.dashboard_curtain_sound_enabled !== false;
     } catch (err) {
       showToast(err.message, true);
     }
@@ -224,6 +228,26 @@
     try {
       await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_show_vote_toasts: e.target.checked }) });
       showToast(e.target.checked ? 'Toast em tempo real ativado!' : 'Toast em tempo real desativado.');
+    } catch (err) {
+      e.target.checked = !e.target.checked;
+      showToast(err.message, true);
+    }
+  });
+
+  $('dashboard-curtain-toggle').addEventListener('change', async (e) => {
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_curtain_enabled: e.target.checked }) });
+      showToast(e.target.checked ? 'Cortina de abertura ativada!' : 'Cortina de abertura desativada — dashboard abre direto.');
+    } catch (err) {
+      e.target.checked = !e.target.checked;
+      showToast(err.message, true);
+    }
+  });
+
+  $('dashboard-curtain-sound-toggle').addEventListener('change', async (e) => {
+    try {
+      await api('/admin/settings', { method: 'PUT', body: JSON.stringify({ dashboard_curtain_sound_enabled: e.target.checked }) });
+      showToast(e.target.checked ? 'Música da cortina ativada!' : 'Música da cortina desativada.');
     } catch (err) {
       e.target.checked = !e.target.checked;
       showToast(err.message, true);
