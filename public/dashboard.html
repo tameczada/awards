@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard ao vivo — Votação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/dashboard.css?v=5" />
+</head>
+<body class="dashboard-body">
+
+<div id="dash-bg-blur" class="dash-bg-blur"></div>
+
+<div id="vote-toast-container" class="vote-toast-container"></div>
+
+<div id="curtain-overlay" class="curtain-overlay" style="display:none">
+  <div class="curtain-panel curtain-left"></div>
+  <div class="curtain-panel curtain-right"></div>
+  <audio id="curtain-sound" preload="auto" src="/curtain-sound.mp3" style="display:none"></audio>
+  <div class="curtain-buttons-group">
+    <button type="button" id="curtain-btn" class="curtain-btn">
+      <span class="curtain-btn-icon">▶</span>
+      <span>Vamos as Categorias Leo&isa live infinita!</span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal "Quem votou em quê" -->
+<div id="voters-modal" class="voters-modal" style="display:none">
+  <div class="voters-modal-overlay"></div>
+  <div class="voters-modal-content">
+    <button type="button" id="voters-close-btn" class="cartinha-close-btn" title="Fechar">✕</button>
+    <h2 id="voters-modal-title">Quem votou em quê</h2>
+    <div id="voters-modal-body" class="voters-modal-body">
+      <div class="loading-state"><div class="spinner"></div>Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<div id="token-gate" class="token-gate">
+  <div class="token-gate-card">
+    <span class="eyebrow">Acesso necessário</span>
+    <h1>Dashboard ao vivo</h1>
+    <p>Este link precisa de um token de acesso. Copie o link completo no painel
+      admin, em <strong>Configurações → Dashboard ao vivo</strong>.</p>
+  </div>
+</div>
+
+<div id="dashboard-root" class="dashboard-root" style="display:none">
+  <header class="dash-header">
+    <div class="dash-header-top">
+      <div class="dash-header-left">
+        <span class="live-dot"></span>
+        <span class="eyebrow">Ao vivo</span>
+      </div>
+      <div class="dash-focus-control">
+        <button type="button" class="dash-nav-btn" id="dash-prev-btn" title="Categoria anterior">←</button>
+        <select id="dash-focus-select">
+          <option value="">Mostrar todas as categorias</option>
+        </select>
+        <button type="button" class="dash-nav-btn" id="dash-next-btn" title="Próxima categoria">→</button>
+        <span class="dash-nav-indicator" id="dash-nav-indicator"></span>
+        <button type="button" class="btn btn-gold" id="dash-reveal-btn" style="display:none">Revelar resultado</button>
+        <button type="button" class="dash-link-btn" id="dash-hide-btn" style="display:none">recensurar</button>
+      </div>
+    </div>
+    <h1 id="dash-title">Léo&Isa Live Infinita Memories!</h1>
+    <div class="dash-meta">
+      <span id="dash-conn-status" class="conn-status">conectando…</span>
+      <span id="dash-updated-at"></span>
+    </div>
+    <div id="dash-vote-numbers" class="dash-vote-numbers"></div>
+  </header>
+
+  <main class="dash-grid" id="dash-grid">
+    <div class="loading-state"><div class="spinner"></div>Carregando categorias…</div>
+  </main>
+
+  <footer class="dash-next-bar" id="dash-next-bar" style="display:none">
+    <span class="dash-next-label">a seguir</span>
+    <span class="dash-next-name" id="dash-next-name"></span>
+  </footer>
+</div>
+
+<script src="/js/themes.js"></script>
+<script src="/js/dashboard.js?v=4"></script>
+</body>
+</html>
