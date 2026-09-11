@@ -538,6 +538,7 @@ app.post('/api/admin/settings/background', authRequired, upload.single('image'),
 // =====================================================
 
 app.get('/api/admin/categories', authRequired, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const { data, error } = await supabase
     .from('categories')
     .select('*, options(count)')
