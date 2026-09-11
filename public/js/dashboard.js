@@ -452,11 +452,20 @@
     return h > 0 ? `${label} ${h}:${pad(m)}:${pad(s)}` : `${label} ${pad(m)}:${pad(s)}`;
   }
 
+  let autoRefreshedFor = null;
   function tickCountdowns() {
     document.querySelectorAll('.dash-countdown[data-ends-at]').forEach((el) => {
       const remaining = new Date(el.dataset.endsAt).getTime() - Date.now();
       el.textContent = fmtCountdown(remaining, el.dataset.mode);
       el.classList.toggle('ending-soon', remaining > 0 && remaining < 60000);
+      // assim que a contagem de VOTAÇÃO (não a de troca) bate zero, busca o
+      // snapshot na hora — não espera o próximo broadcast do servidor nem o
+      // poll de 20s, pra reduzir ao máximo o intervalo até aparecer "próxima
+      // categoria em" no lugar do contador que acabou de zerar
+      if (remaining <= 0 && el.dataset.mode !== 'transition' && autoRefreshedFor !== el.dataset.endsAt) {
+        autoRefreshedFor = el.dataset.endsAt;
+        fetchSnapshot();
+      }
     });
   }
   setInterval(tickCountdowns, 1000);

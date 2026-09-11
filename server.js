@@ -366,7 +366,11 @@ async function checkAutoAdvance() {
     console.error('Erro na fila automática:', err.message);
   }
 }
-const autoAdvanceInterval = setInterval(checkAutoAdvance, 5000);
+// roda a cada 1s (bem mais frequente que o resto do servidor) só pra pegar
+// rapidinho o instante em que o tempo de votação zera e já começar a
+// contagem de troca — sem isso o card fica alguns segundos "parado" sem
+// nenhum contador entre acabar a votação e aparecer o "próxima categoria em"
+const autoAdvanceInterval = setInterval(checkAutoAdvance, 1000);
 autoAdvanceInterval.unref();
 
 async function dashboardTokenRequired(req, res, next) {
