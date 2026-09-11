@@ -654,6 +654,42 @@ app.post('/api/admin/categories/:id/start', authRequired, async (req, res) => {
   res.json({ ...cat, status: computeStatus(cat) });
 });
 
+// "Ir para a fila": manda uma categoria (aberta/encerrada/pausada) de volta
+// pra fila de espera do painel admin. Se ela estava em foco no dashboard ou
+// ativa no chat da Twitch, tira o foco/desativa também — senão o dashboard
+// continuaria mostrando uma categoria que "voltou pra fila" nos bastidores
+app.post('/api/admin/categories/:id/queue', authRequired, async (req, res) => {
+  const { id } = req.params;
+
+  const { data: cat, error: catErr } = await supabase
+    .from('categories')
+    .update({ status: 'agendada', starts_at: null, paused: false })
+    .eq('id', id)
+    .select()
+    .single();
+  if (catErr) return res.status(500).json({ error: catErr.message });
+  if (!cat) return res.status(404).json({ error: 'Categoria não encontrada' });
+
+  const { data: cfg } = await supabase.from('dashboard_config').select('focused_category_id').eq('id', 1).single();
+  if (cfg && cfg.focused_category_id === id) {
+    await supabase
+      .from('dashboard_config')
+      .update({ focused_category_id: null, revealed: false, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+  }
+
+  const { data: tcfg } = await supabase.from('twitch_config').select('active_category_id').eq('id', 1).single();
+  if (tcfg && tcfg.active_category_id === id) {
+    await supabase
+      .from('twitch_config')
+      .update({ active_category_id: null, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+  }
+
+  broadcastDashboard({ type: 'update' });
+  res.json({ ...cat, status: computeStatus(cat) });
+});
+
 // apaga todos os votos de uma categoria (zera a contagem), sem apagar a
 // categoria nem as opções cadastradas
 app.post('/api/admin/categories/:id/reset-votes', authRequired, async (req, res) => {

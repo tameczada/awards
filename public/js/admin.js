@@ -519,6 +519,10 @@
       const pauseBtn = canPause
         ? `<button class="icon-btn" data-pause="${cat.id}" data-paused="${cat.status === 'pausada'}">${cat.status === 'pausada' ? '▶ retomar' : '⏸ pausar'}</button>`
         : '';
+      // "ir pra fila": só faz sentido pra quem já saiu da fila de espera
+      const queueBtn = cat.status !== 'agendada'
+        ? `<button class="icon-btn" data-queue="${cat.id}">↩ ir para a fila</button>`
+        : '';
       card.innerHTML = `
         <div class="admin-cat-head" data-toggle="${cat.id}">
           <div class="admin-cat-thumb" ${thumb}></div>
@@ -530,6 +534,7 @@
           ${cat.live ? `<span class="badge live">● ao vivo</span>` : ''}
           <div class="admin-cat-actions">
             ${pauseBtn}
+            ${queueBtn}
             <button class="icon-btn" data-reset-votes="${cat.id}">zerar votos</button>
             <button class="icon-btn" data-edit="${cat.id}">editar</button>
             <button class="icon-btn danger" data-delete="${cat.id}">excluir</button>
@@ -555,6 +560,9 @@
     els.catList.querySelectorAll('[data-pause]').forEach((btn) => {
       btn.addEventListener('click', () => toggleCategoryPause(btn.dataset.pause, btn.dataset.paused === 'true'));
     });
+    els.catList.querySelectorAll('[data-queue]').forEach((btn) => {
+      btn.addEventListener('click', () => sendToQueue(btn.dataset.queue));
+    });
     els.catList.querySelectorAll('[data-reset-votes]').forEach((btn) => {
       btn.addEventListener('click', () => resetCategoryVotes(btn.dataset.resetVotes));
     });
@@ -564,6 +572,17 @@
     try {
       await api(`/admin/categories/${id}/pause`, { method: 'POST', body: JSON.stringify({ paused: !isPaused }) });
       showToast(isPaused ? 'Votação retomada!' : 'Votação pausada!');
+      await loadCategoriesAdmin();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function sendToQueue(id) {
+    const cat = categoriesCache.find((c) => c.id === id);
+    try {
+      await api(`/admin/categories/${id}/queue`, { method: 'POST' });
+      showToast(`"${cat ? cat.name : 'Categoria'}" voltou pra fila de espera.`);
       await loadCategoriesAdmin();
     } catch (err) {
       showToast(err.message, true);
