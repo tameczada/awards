@@ -234,6 +234,10 @@ async function getDashboardPayload() {
   // a consulta quebre inteira — só cai de volta pro modo "mostrar todas".
   const focusedCategoryId = cfg.focused_category_id || null;
   const revealed = !!cfg.revealed;
+  // só é relevante enquanto a categoria em foco é a mesma que está contando
+  // a troca — se o admin focou outra categoria manualmente nesse meio tempo,
+  // esse valor já foi limpo (start/start-timed sempre zeram esse campo)
+  const transitionEndsAt = cfg.auto_advance_transition_ends_at || null;
 
   const full = await getLiveSnapshot();
 
@@ -243,6 +247,7 @@ async function getDashboardPayload() {
       revealed: false,
       category_options: full.categoryOptions,
       categories: full.categories,
+      transition_ends_at: null,
     };
   }
 
@@ -254,6 +259,7 @@ async function getDashboardPayload() {
       revealed: false,
       category_options: full.categoryOptions,
       categories: full.categories,
+      transition_ends_at: null,
     };
   }
 
@@ -290,8 +296,78 @@ async function getDashboardPayload() {
     revealed,
     category_options: full.categoryOptions,
     categories: [focusedCategory],
+    transition_ends_at: transitionEndsAt,
   };
 }
+
+// abre uma categoria com um prazo de votação definido (ends_at calculado a
+// partir de votingSeconds) e a foca no dashboard/chat — usada tanto pelo botão
+// manual "iniciar com tempo" quanto pela própria fila automática avançando sozinha
+async function startCategoryTimed(id, votingSeconds) {
+  const endsAt = new Date(Date.now() + votingSeconds * 1000).toISOString();
+  const { data: cat, error: catErr } = await supabase
+    .from('categories')
+    .update({ status: 'aberta', starts_at: null, ends_at: endsAt, paused: false })
+    .eq('id', id)
+    .select()
+    .single();
+  if (catErr) throw catErr;
+  if (!cat) return null;
+
+  await supabase
+    .from('dashboard_config')
+    .update({ focused_category_id: id, revealed: false, auto_advance_transition_ends_at: null, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  await supabase
+    .from('twitch_config')
+    .update({ active_category_id: id, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+
+  return cat;
+}
+
+// roda a cada poucos segundos: se a fila automática estiver ligada e a
+// categoria em foco já tiver encerrado o tempo de votação, conta o tempo de
+// troca e, ao final dele, avança sozinha pra próxima categoria "agendada"
+async function checkAutoAdvance() {
+  try {
+    const { data: cfg } = await supabase.from('dashboard_config').select('*').eq('id', 1).single();
+    if (!cfg || !cfg.auto_advance_enabled || !cfg.focused_category_id) return;
+
+    const { data: cat } = await supabase.from('categories').select('*').eq('id', cfg.focused_category_id).single();
+    if (!cat || computeStatus(cat) !== 'encerrada') return; // ainda votando (ou pausada) — nada a fazer ainda
+
+    if (!cfg.auto_advance_transition_ends_at) {
+      // acabou de encerrar a votação — começa a contagem de troca agora
+      const transitionEndsAt = new Date(Date.now() + (cfg.auto_advance_transition_seconds || 0) * 1000).toISOString();
+      await supabase.from('dashboard_config').update({ auto_advance_transition_ends_at: transitionEndsAt, updated_at: new Date().toISOString() }).eq('id', 1);
+      broadcastDashboard({ type: 'update' });
+      return;
+    }
+
+    if (new Date(cfg.auto_advance_transition_ends_at) > new Date()) return; // ainda contando a troca
+
+    const { data: next } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('status', 'agendada')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    if (next && next.length) {
+      await startCategoryTimed(next[0].id, cfg.auto_advance_voting_seconds || 120);
+    } else {
+      // fila vazia — desliga a automação e deixa a última categoria como está
+      await supabase.from('dashboard_config').update({ auto_advance_enabled: false, auto_advance_transition_ends_at: null, updated_at: new Date().toISOString() }).eq('id', 1);
+    }
+    broadcastDashboard({ type: 'update' });
+  } catch (err) {
+    console.error('Erro na fila automática:', err.message);
+  }
+}
+const autoAdvanceInterval = setInterval(checkAutoAdvance, 5000);
+autoAdvanceInterval.unref();
 
 async function dashboardTokenRequired(req, res, next) {
   const token = req.query.token || (req.body && req.body.token);
@@ -628,13 +704,15 @@ app.post('/api/admin/categories/:id/pause', authRequired, async (req, res) => {
 
 // "Iniciar" da fila de espera: abre a votação da categoria agora e a coloca
 // em foco automaticamente no dashboard ao vivo (e como categoria ativa pro
-// voto via chat da Twitch), tudo em uma tacada só a partir do painel admin
+// voto via chat da Twitch), tudo em uma tacada só a partir do painel admin.
+// "Sem tempo" = votação fica aberta até fechar manualmente, e desliga
+// qualquer fila automática que estivesse rodando (é uma ação manual explícita)
 app.post('/api/admin/categories/:id/start', authRequired, async (req, res) => {
   const { id } = req.params;
 
   const { data: cat, error: catErr } = await supabase
     .from('categories')
-    .update({ status: 'aberta', starts_at: null, paused: false })
+    .update({ status: 'aberta', starts_at: null, ends_at: null, paused: false })
     .eq('id', id)
     .select()
     .single();
@@ -643,7 +721,7 @@ app.post('/api/admin/categories/:id/start', authRequired, async (req, res) => {
 
   const { error: dashErr } = await supabase
     .from('dashboard_config')
-    .update({ focused_category_id: id, revealed: false, updated_at: new Date().toISOString() })
+    .update({ focused_category_id: id, revealed: false, auto_advance_enabled: false, auto_advance_transition_ends_at: null, updated_at: new Date().toISOString() })
     .eq('id', 1);
   if (dashErr) return res.status(500).json({ error: dashErr.message });
 
@@ -655,6 +733,71 @@ app.post('/api/admin/categories/:id/start', authRequired, async (req, res) => {
 
   broadcastDashboard({ type: 'update' });
   res.json({ ...cat, status: computeStatus(cat) });
+});
+
+// "Iniciar fila automática": abre a categoria já com um prazo de votação e,
+// quando esse prazo acabar, espera o tempo de troca configurado e avança
+// sozinha pra próxima categoria "agendada" — e assim por diante até a fila
+// esvaziar. voting_seconds/transition_seconds valem pra toda a sequência.
+app.post('/api/admin/categories/:id/start-auto', authRequired, async (req, res) => {
+  const { id } = req.params;
+  const votingSeconds = Number(req.body.voting_seconds);
+  const transitionSeconds = Number(req.body.transition_seconds);
+  if (!Number.isFinite(votingSeconds) || votingSeconds <= 0) {
+    return res.status(400).json({ error: 'Tempo de votação inválido' });
+  }
+  if (!Number.isFinite(transitionSeconds) || transitionSeconds < 0) {
+    return res.status(400).json({ error: 'Tempo de troca inválido' });
+  }
+
+  let cat;
+  try {
+    cat = await startCategoryTimed(id, votingSeconds);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+  if (!cat) return res.status(404).json({ error: 'Categoria não encontrada' });
+
+  const { error: cfgErr } = await supabase
+    .from('dashboard_config')
+    .update({
+      auto_advance_enabled: true,
+      auto_advance_voting_seconds: votingSeconds,
+      auto_advance_transition_seconds: transitionSeconds,
+      auto_advance_transition_ends_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', 1);
+  if (cfgErr) return res.status(500).json({ error: cfgErr.message });
+
+  broadcastDashboard({ type: 'update' });
+  res.json({ ...cat, status: computeStatus(cat) });
+});
+
+// status atual da fila automática, pra pintar o painel admin
+app.get('/api/admin/auto-advance', authRequired, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const { data: cfg, error } = await supabase.from('dashboard_config').select('*').eq('id', 1).single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({
+    enabled: !!cfg.auto_advance_enabled,
+    voting_seconds: cfg.auto_advance_voting_seconds || null,
+    transition_seconds: cfg.auto_advance_transition_seconds || null,
+    transition_ends_at: cfg.auto_advance_transition_ends_at || null,
+    focused_category_id: cfg.focused_category_id || null,
+  });
+});
+
+// desliga a fila automática sem mexer na categoria que está aberta agora
+// (ela continua do jeito que está, só não avança mais sozinha depois)
+app.post('/api/admin/auto-advance/stop', authRequired, async (req, res) => {
+  const { error } = await supabase
+    .from('dashboard_config')
+    .update({ auto_advance_enabled: false, auto_advance_transition_ends_at: null, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  if (error) return res.status(500).json({ error: error.message });
+  broadcastDashboard({ type: 'update' });
+  res.json({ ok: true });
 });
 
 // "Ir para a fila": manda uma categoria (aberta/encerrada/pausada) de volta
@@ -677,7 +820,7 @@ app.post('/api/admin/categories/:id/queue', authRequired, async (req, res) => {
   if (cfg && cfg.focused_category_id === id) {
     await supabase
       .from('dashboard_config')
-      .update({ focused_category_id: null, revealed: false, updated_at: new Date().toISOString() })
+      .update({ focused_category_id: null, revealed: false, auto_advance_enabled: false, auto_advance_transition_ends_at: null, updated_at: new Date().toISOString() })
       .eq('id', 1);
   }
 

@@ -108,6 +108,16 @@ alter table categories add column if not exists paused boolean not null default 
 alter table dashboard_config add column if not exists focused_category_id uuid references categories(id) on delete set null;
 alter table dashboard_config add column if not exists revealed boolean default false;
 
+-- fila automática: quando ligada, ao encerrar o tempo de votação da categoria
+-- em foco, espera "auto_advance_transition_seconds" e passa sozinho pra
+-- próxima categoria "agendada" da fila, abrindo ela por
+-- "auto_advance_voting_seconds". auto_advance_transition_ends_at só fica
+-- preenchido durante essa janela de troca (null enquanto ainda tá votando)
+alter table dashboard_config add column if not exists auto_advance_enabled boolean not null default false;
+alter table dashboard_config add column if not exists auto_advance_voting_seconds int;
+alter table dashboard_config add column if not exists auto_advance_transition_seconds int;
+alter table dashboard_config add column if not exists auto_advance_transition_ends_at timestamptz;
+
 -- =====================================================
 -- TABELA: options (opcoes dentro de cada categoria)
 -- =====================================================

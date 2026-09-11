@@ -427,6 +427,72 @@ textarea { resize: vertical; font-family: var(--font-body); }
   margin: 0.3rem 0 0;
 }
 
+.auto-advance-box {
+  background: var(--void-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+.auto-advance-fields-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 0.7rem;
+}
+.auto-advance-fields-row { display: flex; gap: 1.6rem; flex-wrap: wrap; }
+.auto-advance-fields-row label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--cream-dim);
+}
+.time-input-pair {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+}
+.time-input-pair input {
+  width: 52px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--cream);
+  border-radius: 6px;
+  padding: 0.35rem 0.4rem;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+.auto-advance-on {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--gold-soft);
+}
+
+.queue-card-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.btn-start-timed {
+  background: var(--void-2);
+  color: var(--gold-soft);
+  border: 1px solid var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.btn-start-timed:hover { background: rgba(203, 161, 53, 0.12); }
+
 .queue-empty {
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -439,6 +505,7 @@ textarea { resize: vertical; font-family: var(--font-body); }
 .queue-card {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1.1rem;
   background: var(--card);
   border: 1px solid var(--line);

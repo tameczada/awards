@@ -82,8 +82,33 @@
       <div class="queue-block">
         <div class="queue-block-head">
           <span class="eyebrow">Fila de espera</span>
-          <p class="queue-hint">Categorias prontas, aguardando pra entrar no ar. Aperte "Iniciar" pra colocar em votação e trocar o dashboard pra ela na hora.</p>
+          <p class="queue-hint">Categorias prontas, aguardando pra entrar no ar. Aperte "Iniciar" pra colocar em votação sem prazo, ou monte a fila automática abaixo pra ela ir passando sozinha de categoria em categoria.</p>
         </div>
+
+        <div class="auto-advance-box" id="auto-advance-box">
+          <div class="auto-advance-fields">
+            <span class="auto-advance-fields-label">Tempos da fila automática (usados no botão "⏱ com tempo" de cada categoria abaixo):</span>
+            <div class="auto-advance-fields-row">
+              <label>Votação
+                <div class="time-input-pair">
+                  <input type="number" id="auto-voting-min" min="0" value="2" /> min
+                  <input type="number" id="auto-voting-sec" min="0" max="59" value="0" /> seg
+                </div>
+              </label>
+              <label>Troca de categoria
+                <div class="time-input-pair">
+                  <input type="number" id="auto-transition-min" min="0" value="1" /> min
+                  <input type="number" id="auto-transition-sec" min="0" max="59" value="0" /> seg
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="auto-advance-on" id="auto-advance-on-view" style="display:none">
+            <span id="auto-advance-status-text">🔁 Fila automática rodando…</span>
+            <button type="button" class="icon-btn danger" id="stop-auto-queue-btn">⏹ Parar automação</button>
+          </div>
+        </div>
+
         <div id="queue-list"></div>
       </div>
 

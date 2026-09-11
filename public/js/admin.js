@@ -3,6 +3,7 @@
   let token = localStorage.getItem('admin_token') || null;
   let categoriesCache = [];
   let openCatId = null;
+  let autoAdvancePollStarted = false;
 
   const $ = (id) => document.getElementById(id);
 
@@ -80,6 +81,12 @@
       loadSettingsAdmin();
       loadDashboardLink();
       loadTwitchConfig();
+      // atualiza sozinho enquanto a fila automática estiver avançando —
+      // assim o admin vê a categoria trocando sem precisar dar refresh
+      if (!autoAdvancePollStarted) {
+        autoAdvancePollStarted = true;
+        setInterval(() => loadCategoriesAdmin({ silent: true }), 8000);
+      }
     } catch {
       logout();
     }
@@ -478,6 +485,7 @@
       categoriesCache = await api('/admin/categories');
       renderQueue();
       renderCategoriesAdmin();
+      await loadAutoAdvanceStatus();
       // reabre o painel que estava expandido antes do refresh, se ainda existir
       if (openCatId && categoriesCache.some((c) => c.id === openCatId)) {
         const body = $(`cat-body-${openCatId}`);
@@ -508,12 +516,18 @@
             <strong>${escapeHtml(cat.name)}</strong>
             <span>${cat.options_count} opç${cat.options_count === 1 ? 'ão' : 'ões'}</span>
           </div>
-          <button class="btn-start" data-start="${cat.id}">▶ Iniciar</button>
+          <div class="queue-card-actions">
+            <button class="btn-start" data-start="${cat.id}">▶ sem tempo</button>
+            <button class="btn-start-timed" data-start-timed="${cat.id}">⏱ com tempo</button>
+          </div>
         </div>
       `;
     }).join('');
     els.queueList.querySelectorAll('[data-start]').forEach((btn) => {
       btn.addEventListener('click', () => startCategory(btn.dataset.start));
+    });
+    els.queueList.querySelectorAll('[data-start-timed]').forEach((btn) => {
+      btn.addEventListener('click', () => startCategoryTimed(btn.dataset.startTimed));
     });
   }
 
@@ -523,10 +537,68 @@
       await api(`/admin/categories/${id}/start`, { method: 'POST' });
       showToast(`"${cat ? cat.name : 'Categoria'}" está no ar — dashboard atualizado!`);
       await loadCategoriesAdmin();
+      await loadAutoAdvanceStatus();
     } catch (err) {
       showToast(err.message, true);
     }
   }
+
+  function readAutoAdvanceFields() {
+    const votingSeconds = (Number($('auto-voting-min').value) || 0) * 60 + (Number($('auto-voting-sec').value) || 0);
+    const transitionSeconds = (Number($('auto-transition-min').value) || 0) * 60 + (Number($('auto-transition-sec').value) || 0);
+    return { votingSeconds, transitionSeconds };
+  }
+
+  async function startCategoryTimed(id) {
+    const cat = categoriesCache.find((c) => c.id === id);
+    const { votingSeconds, transitionSeconds } = readAutoAdvanceFields();
+    if (votingSeconds <= 0) {
+      showToast('Digite quanto tempo a votação deve durar', true);
+      return;
+    }
+    try {
+      await api(`/admin/categories/${id}/start-auto`, {
+        method: 'POST',
+        body: JSON.stringify({ voting_seconds: votingSeconds, transition_seconds: transitionSeconds }),
+      });
+      showToast(`"${cat ? cat.name : 'Categoria'}" no ar — fila automática ligada!`);
+      await loadCategoriesAdmin();
+      await loadAutoAdvanceStatus();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function stopAutoAdvance() {
+    try {
+      await api('/admin/auto-advance/stop', { method: 'POST' });
+      showToast('Fila automática parada — a categoria atual continua no ar.');
+      await loadAutoAdvanceStatus();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  async function loadAutoAdvanceStatus() {
+    try {
+      const status = await api('/admin/auto-advance');
+      const onView = $('auto-advance-on-view');
+      if (status.enabled) {
+        const cat = categoriesCache.find((c) => c.id === status.focused_category_id);
+        const mm = Math.floor((status.voting_seconds || 0) / 60);
+        const ss = (status.voting_seconds || 0) % 60;
+        const tm = Math.floor((status.transition_seconds || 0) / 60);
+        const ts = (status.transition_seconds || 0) % 60;
+        $('auto-advance-status-text').textContent =
+          `🔁 Fila automática rodando (votação ${mm}:${String(ss).padStart(2, '0')} · troca ${tm}:${String(ts).padStart(2, '0')})${cat ? ` — agora em "${cat.name}"` : ''}`;
+        onView.style.display = 'flex';
+      } else {
+        onView.style.display = 'none';
+      }
+    } catch { /* falha silenciosa — não é crítico pra tela carregar */ }
+  }
+  $('stop-auto-queue-btn').addEventListener('click', stopAutoAdvance);
+
 
   function renderCategoriesAdmin() {
     if (!categoriesCache.length) {

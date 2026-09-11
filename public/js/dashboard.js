@@ -387,7 +387,7 @@
     `;
   }
 
-  function renderCard(cat, isFocusedMode, revealed, justRevealed, entering, staggerReveal) {
+  function renderCard(cat, isFocusedMode, revealed, justRevealed, entering, staggerReveal, transitionEndsAt) {
     const hasBg = !!cat.image_url;
     const bgStyle = hasBg ? ` style="background-image:url('${cat.image_url}')"` : '';
     const sizeClass = `size-${cat.card_size === 'pequeno' || cat.card_size === 'grande' ? cat.card_size : 'medio'}`;
@@ -397,6 +397,11 @@
     // (mesmo pausada, o prazo continua correndo e ela fecha sozinha na hora certa)
     const countdownHtml = ((cat.status === 'aberta' || cat.status === 'pausada') && cat.ends_at)
       ? `<span class="dash-countdown" data-ends-at="${cat.ends_at}">encerra em …</span>`
+      : '';
+    // fila automática: votação já encerrou e está contando pra trocar sozinha
+    // pra próxima categoria — aparece no lugar do contador de votação normal
+    const transitionHtml = (cat.status === 'encerrada' && transitionEndsAt)
+      ? `<span class="dash-countdown dash-transition" data-ends-at="${transitionEndsAt}" data-mode="transition">próxima categoria em …</span>`
       : '';
 
     let optionsHtml;
@@ -425,6 +430,7 @@
             <span>${totalLabel}</span>
           </div>
           ${countdownHtml}
+          ${transitionHtml}
         </div>
         <div class="dash-options">${optionsHtml}</div>
         ${votersBtnHtml}
@@ -435,20 +441,21 @@
   // atualiza o texto de todos os contadores regressivos a cada segundo,
   // sem precisar re-renderizar o grid inteiro (isso evitaria animações e
   // manteria o resto do card intacto)
-  function fmtCountdown(ms) {
-    if (ms <= 0) return 'encerrando…';
+  function fmtCountdown(ms, mode) {
+    if (ms <= 0) return mode === 'transition' ? 'trocando…' : 'encerrando…';
     const totalSec = Math.floor(ms / 1000);
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     const pad = (n) => String(n).padStart(2, '0');
-    return h > 0 ? `encerra em ${h}:${pad(m)}:${pad(s)}` : `encerra em ${pad(m)}:${pad(s)}`;
+    const label = mode === 'transition' ? 'próxima categoria em' : 'encerra em';
+    return h > 0 ? `${label} ${h}:${pad(m)}:${pad(s)}` : `${label} ${pad(m)}:${pad(s)}`;
   }
 
   function tickCountdowns() {
     document.querySelectorAll('.dash-countdown[data-ends-at]').forEach((el) => {
       const remaining = new Date(el.dataset.endsAt).getTime() - Date.now();
-      el.textContent = fmtCountdown(remaining);
+      el.textContent = fmtCountdown(remaining, el.dataset.mode);
       el.classList.toggle('ending-soon', remaining > 0 && remaining < 60000);
     });
   }
@@ -515,7 +522,7 @@
       if (!cats.length) {
         els.grid.innerHTML = `<div class="empty-state"><h3>Nenhuma categoria ainda</h3></div>`;
       } else {
-        els.grid.innerHTML = cats.map((c) => renderCard(c, isFocusedMode, data.revealed, justRevealed, isFocusedMode && focusChanged, staggerReveal)).join('');
+        els.grid.innerHTML = cats.map((c) => renderCard(c, isFocusedMode, data.revealed, justRevealed, isFocusedMode && focusChanged, staggerReveal, isFocusedMode ? data.transition_ends_at : null)).join('');
         tickCountdowns(); // evita esperar 1s pro primeiro texto do contador aparecer
       }
       els.updatedAt.textContent = `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
