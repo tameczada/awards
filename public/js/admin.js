@@ -1152,6 +1152,4 @@
     }
   });
 
-  checkSession();
-  if (!token) els.authScreen.style.display = 'flex';
 })();
