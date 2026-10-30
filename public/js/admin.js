@@ -63,6 +63,7 @@
   }
 
   // ===== AUTH =====
+  let refreshing = false;
   function logout() {
     token = null;
     localStorage.removeItem('admin_token');
@@ -85,7 +86,11 @@
       // assim o admin vê a categoria trocando sem precisar dar refresh
       if (!autoAdvancePollStarted) {
         autoAdvancePollStarted = true;
-        setInterval(() => loadCategoriesAdmin({ silent: true }), 8000);
+        setInterval(() => {
+          if (document.hidden || refreshing) return;
+          refreshing = true;
+          loadCategoriesAdmin({ silent: true }).finally(() => { refreshing = false; });
+        }, 8000);
       }
     } catch {
       logout();
@@ -496,16 +501,24 @@
         }
       }
       categoriesCache = fresh;
+      // guarda o conteúdo do painel aberto pra não piscar vazio durante o re-render
+      const prevBody = openCatId ? $(`cat-body-${openCatId}`) : null;
+      const prevHtml = prevBody ? prevBody.innerHTML : '';
+      const prevScroll = window.scrollY;
       renderQueue();
       renderCategoriesAdmin();
-      await loadAutoAdvanceStatus();
-      // reabre o painel que estava expandido antes do refresh, se ainda existir
       if (openCatId && categoriesCache.some((c) => c.id === openCatId)) {
         const body = $(`cat-body-${openCatId}`);
         if (body) {
           body.classList.add('open');
-          await renderCategoryBody(openCatId, body);
+          if (prevHtml) body.innerHTML = prevHtml;
+          window.scrollTo(0, prevScroll);
         }
+      }
+      await loadAutoAdvanceStatus();
+      if (openCatId && categoriesCache.some((c) => c.id === openCatId)) {
+        const body = $(`cat-body-${openCatId}`);
+        if (body) await renderCategoryBody(openCatId, body);
       }
     } catch (err) {
       els.catList.innerHTML = `<div class="empty-state"><h3>Erro ao carregar</h3><p>${escapeHtml(err.message)}</p></div>`;
