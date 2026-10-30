@@ -87,7 +87,7 @@
       if (!autoAdvancePollStarted) {
         autoAdvancePollStarted = true;
         setInterval(() => {
-          if (document.hidden || refreshing) return;
+          if (document.hidden || refreshing || openCatId) return; // painel aberto: não mexe na tela
           refreshing = true;
           loadCategoriesAdmin({ silent: true }).finally(() => { refreshing = false; });
         }, 8000);
