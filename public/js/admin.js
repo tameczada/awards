@@ -482,7 +482,20 @@
   async function loadCategoriesAdmin({ silent = false } = {}) {
     if (!silent) els.catList.innerHTML = `<div class="loading-state"><div class="spinner"></div>Carregando…</div>`;
     try {
-      categoriesCache = await api('/admin/categories');
+      const fresh = await api('/admin/categories');
+      if (silent) {
+        // polling automático: não mexe na tela se o admin está editando
+        // (modal aberto ou digitando num campo) ou se nada mudou
+        const ae = document.activeElement;
+        const editing = els.modal.classList.contains('open')
+          || (ae && els.catList.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName));
+        const unchanged = JSON.stringify(fresh) === JSON.stringify(categoriesCache);
+        if (editing || unchanged) {
+          if (!editing) await loadAutoAdvanceStatus();
+          return;
+        }
+      }
+      categoriesCache = fresh;
       renderQueue();
       renderCategoriesAdmin();
       await loadAutoAdvanceStatus();
